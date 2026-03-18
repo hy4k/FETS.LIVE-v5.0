@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+build/
+dist/
+**/dist/
+coverage/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+pnpm-debug.log*
+npm-debug.log*
+
+# Environment
+.env*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+.kilocode/
+.claude/
+
+# Build/debug artifacts
+build_log.txt
+build_output.txt
+build-log.txt
+build_errors.txt
+lint_output.txt
+ts_errors.txt
+tsc_output.txt
+tsc_output_2.txt
+tsc-check.txt
+tsc-errors.txt
+search_results.txt
+filelist.txt
+file_tree.txt
+out.js
+
+# Android build (Capacitor)
+fets-point/android/
+
+# MCP config
+.mcp.json
+
+# Gemini agent
+.gemini/

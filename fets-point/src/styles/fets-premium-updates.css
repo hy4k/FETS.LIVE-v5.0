@@ -1,0 +1,417 @@
+/* FETS Premium Updates - Enhanced Color Schemes and Modern Design */
+
+/* Updated Primary Color for Today's Activity */
+:root {
+  --fets-activity-primary: #ffcc33;
+  --fets-activity-primary-dark: #e6b800;
+  --fets-activity-primary-light: #fff2cc;
+  
+  /* Calendar Gradient Colors */
+  --calendar-gradient-start: #FFFBE6;
+  --calendar-gradient-mid: #FFD633;
+  --calendar-gradient-end: #B38F00;
+  
+  /* Enhanced Shadow System */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-moderate: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-prominent: 0 8px 25px rgba(0, 0, 0, 0.2);
+  --shadow-dramatic: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+/* Enhanced Activity Cards with New Color */
+.activity-card-enhanced {
+  background: var(--fets-activity-primary);
+  color: #000000;
+  border: 2px solid var(--fets-activity-primary-dark);
+  box-shadow: var(--shadow-moderate);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.activity-card-enhanced:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-dramatic);
+  background: var(--fets-activity-primary-light);
+}
+
+.activity-card-enhanced .activity-icon {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000000;
+  backdrop-filter: blur(10px);
+}
+
+.activity-card-enhanced .activity-title {
+  color: rgba(0, 0, 0, 0.8);
+  font-weight: 700;
+}
+
+.activity-card-enhanced .activity-value {
+  color: #000000;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.activity-card-enhanced .activity-subtitle {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Week-Strips Modern Enhancement */
+.week-strips-modern {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px;
+  box-shadow: var(--shadow-prominent);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.week-strip-modern {
+  border-bottom: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.week-strip-modern:hover {
+  background: #f8fafc;
+}
+
+.week-strip-header-modern {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.week-strip-title-modern {
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.week-days-preview {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.week-day-preview {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s ease;
+}
+
+.week-day-preview.today {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.week-day-preview.weekend {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Enhanced Day Boxes */
+.day-box-enhanced {
+  position: relative;
+  min-width: 48px;
+  height: 52px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.day-box-enhanced::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.day-box-enhanced:hover::before {
+  opacity: 1;
+}
+
+.day-box-enhanced:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--shadow-moderate);
+  z-index: 10;
+}
+
+.day-box-enhanced.today {
+  box-shadow: 0 0 0 3px #3b82f6, var(--shadow-subtle);
+  transform: scale(1.02);
+}
+
+/* Status-specific enhancements */
+.day-box-enhanced.working {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+}
+
+.day-box-enhanced.off {
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  color: #000000;
+}
+
+.day-box-enhanced.leave {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.day-box-enhanced.training {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.day-box-enhanced.no-schedule {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+/* Enhanced Weekend Shading */
+.weekend-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* Enhanced Tooltips */
+.day-tooltip-enhanced {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(17, 24, 39, 0.95) 100%);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  z-index: 50;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-prominent);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.day-tooltip-enhanced::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.95);
+}
+
+.tooltip-date {
+  font-weight: 700;
+  color: #60a5fa;
+  margin-bottom: 0.25rem;
+}
+
+.tooltip-status {
+  color: #d1d5db;
+  margin-bottom: 0.25rem;
+}
+
+.tooltip-overtime {
+  color: #c084fc;
+  font-size: 0.75rem;
+}
+
+/* Enhanced Staff Name Interaction */
+.staff-name-enhanced {
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.staff-name-enhanced:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+  border-color: rgba(59, 130, 246, 0.2);
+  transform: translateX(4px);
+}
+
+.staff-name-enhanced.selected {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 191, 36, 0.1) 100%);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.2);
+}
+
+.staff-name-enhanced.my-row {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 197, 253, 0.1) 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+/* Enhanced Bulk Operations */
+.bulk-operations-enhanced {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-top: 4px solid #f59e0b;
+  padding: 1.5rem;
+  border-radius: 0 0 20px 20px;
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.bulk-operation-btn-enhanced {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.bulk-operation-btn-enhanced::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.bulk-operation-btn-enhanced:hover::before {
+  opacity: 1;
+}
+
+.bulk-operation-btn-enhanced:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--shadow-moderate);
+}
+
+.bulk-operation-btn-enhanced:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Calendar Gradient Implementation */
+.calendar-gradient-day {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-gradient-day::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.calendar-gradient-day:hover::before {
+  opacity: 1;
+}
+
+.calendar-gradient-day:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-moderate);
+}
+
+/* Enhanced Modal Styling */
+.modal-enhanced {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.98) 0%, rgba(0, 0, 0, 0.95) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: var(--shadow-dramatic);
+}
+
+.modal-header-enhanced {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  border-radius: 20px 20px 0 0;
+}
+
+.modal-title-enhanced {
+  color: #60a5fa;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.modal-subtitle-enhanced {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Responsive Enhancements */
+@media (max-width: 1024px) {
+  .day-box-enhanced {
+    min-width: 40px;
+    height: 44px;
+  }
+  
+  .week-strip-header-modern {
+    padding: 0.75rem 1rem;
+  }
+  
+  .week-strip-title-modern {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .day-box-enhanced {
+    min-width: 36px;
+    height: 40px;
+  }
+  
+  .activity-card-enhanced {
+    padding: 1rem;
+  }
+  
+  .bulk-operations-enhanced {
+    padding: 1rem;
+  }
+  
+  .bulk-operation-btn-enhanced {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .day-box-enhanced {
+    min-width: 32px;
+    height: 36px;
+  }
+  
+  .week-days-preview {
+    gap: 0.125rem;
+  }
+  
+  .week-day-preview {
+    padding: 0.125rem 0.25rem;
+    font-size: 0.625rem;
+  }
+  
+  .day-tooltip-enhanced {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+}

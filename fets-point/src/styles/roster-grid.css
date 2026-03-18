@@ -1,0 +1,206 @@
+/* Premium FETS Roster Grid Styles */
+
+/* Ensure sticky positioning works properly */
+.roster-grid-container {
+  position: relative;
+  overflow: auto;
+  border-radius: 0.75rem;
+}
+
+/* Table-based sticky columns */
+.roster-grid-container table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+}
+
+/* Sticky header */
+.roster-grid-container thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Sticky left column (staff names) */
+.roster-grid-container th:first-child,
+.roster-grid-container td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background-color: white;
+  border-right: 1px solid #e5e7eb;
+}
+
+/* Extra z-index for top-left corner */
+.roster-grid-container thead th:first-child {
+  z-index: 30;
+  background-color: white;
+}
+
+/* Smooth scrolling */
+.roster-grid-container {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar styling for premium feel */
+.roster-grid-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.roster-grid-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.roster-grid-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  border: 1px solid #f1f5f9;
+}
+
+.roster-grid-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Hover effects for cells */
+.roster-grid-container tbody tr:hover {
+  background-color: rgba(248, 250, 252, 0.5);
+}
+
+/* Focus states for accessibility */
+.roster-grid-container td:focus,
+.roster-grid-container th:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+/* Ensure text doesn't wrap in cells */
+.roster-grid-container th,
+.roster-grid-container td {
+  white-space: nowrap;
+}
+
+/* Staff name column specific styling */
+.roster-grid-container .staff-name-cell {
+  min-width: 200px;
+  max-width: 200px;
+  width: 200px;
+}
+
+/* Date cells styling */
+.roster-grid-container .date-cell {
+  min-width: 80px;
+  width: 80px;
+}
+
+/* Shift cells styling */
+.roster-grid-container .shift-cell {
+  min-width: 80px;
+  width: 80px;
+}
+
+/* Premium shadows and borders */
+.roster-grid-container {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .roster-grid-container .staff-name-cell {
+    min-width: 150px;
+    max-width: 150px;
+    width: 150px;
+  }
+  
+  .roster-grid-container .date-cell,
+  .roster-grid-container .shift-cell {
+    min-width: 60px;
+    width: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .roster-grid-container {
+    font-size: 0.875rem;
+  }
+  
+  .roster-grid-container .staff-name-cell {
+    min-width: 120px;
+    max-width: 120px;
+    width: 120px;
+  }
+  
+  .roster-grid-container .date-cell,
+  .roster-grid-container .shift-cell {
+    min-width: 50px;
+    width: 50px;
+  }
+}
+
+/* Animation for drawer */
+.drawer-enter {
+  transform: translateX(100%);
+}
+
+.drawer-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms ease-in-out;
+}
+
+.drawer-exit {
+  transform: translateX(0);
+}
+
+.drawer-exit-active {
+  transform: translateX(100%);
+  transition: transform 300ms ease-in-out;
+}
+
+/* Premium typography */
+.premium-title {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.premium-body {
+  font-family: 'Inter', 'system-ui', '-apple-system', sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Elegant button styles */
+.elegant-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.elegant-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Notification styles */
+.notification-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.notification-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.notification-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 300ms, transform 300ms;
+}

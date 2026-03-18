@@ -1,0 +1,575 @@
+/* ==========================================================================
+   UNIFIED DESIGN SYSTEM - SOOTHING COLOR PALETTE & LAYOUTS
+   ========================================================================== */
+
+/* COLOR PALETTE - Unified Across All Pages */
+:root {
+  /* Primary Colors - Soothing & Professional */
+  --unified-primary: #6366F1;        /* Indigo - Primary actions & focus */
+  --unified-secondary: #8B5CF6;      /* Purple - Secondary elements */
+  --unified-accent: #F59E0B;         /* Amber - Alerts & highlights */
+
+  /* Extended Palette for Specific Pages */
+  --candidate-primary: #06B6D4;      /* Cyan - Candidate Tracker */
+  --roster-primary: #10B981;         /* Emerald - FETS Roster */
+  --calendar-primary: #F43F5E;       /* Rose - FETS Calendar */
+  --incident-primary: #EF4444;       /* Red - Incident Manager */
+
+  /* Neutral & Supporting */
+  --unified-light: #F8FAFC;          /* Very light background */
+  --unified-surface: #F1F5F9;        /* Surface background */
+  --unified-border: #E2E8F0;         /* Subtle borders */
+  --unified-text: #1E293B;           /* Primary text */
+  --unified-text-secondary: #64748B; /* Secondary text */
+}
+
+/* ==========================================================================
+   PAGE WRAPPER - Unified Gradient Backgrounds
+   ========================================================================== */
+
+.page-wrapper {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Candidate Tracker - Cyan gradient */
+.page-wrapper--candidate-tracker {
+  background: linear-gradient(135deg, #E0F2FE 0%, #CFFAFE 50%, #A5F3FC 100%);
+}
+
+/* FETS Roster - Emerald gradient */
+.page-wrapper--fets-roster {
+  background: linear-gradient(135deg, #DCFCE7 0%, #CCFBF1 50%, #A7F3D0 100%);
+}
+
+/* FETS Calendar - Rose gradient */
+.page-wrapper--fets-calendar {
+  background: linear-gradient(135deg, #FFE4E6 0%, #FBCFE8 50%, #FBDFE8 100%);
+}
+
+/* Incident Manager - Red gradient */
+.page-wrapper--incident-manager {
+  background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 50%, #FCA5A5 100%);
+}
+
+/* ==========================================================================
+   ANIMATED GRADIENT BACKGROUNDS - Subtle Motion
+   ========================================================================== */
+
+@keyframes subtle-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.page-wrapper {
+  background-size: 200% 200%;
+  animation: subtle-gradient-shift 15s ease infinite;
+}
+
+/* ==========================================================================
+   PAGE HEADER - Premium Styling
+   ========================================================================== */
+
+.page-header {
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.page-header__title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.page-header__subtitle {
+  font-size: 1rem;
+  color: var(--unified-text-secondary);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.page-header__meta {
+  font-size: 0.875rem;
+  color: var(--unified-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Color-coded headers */
+.page-header__title--candidate-tracker {
+  color: var(--candidate-primary);
+  text-shadow: 0 2px 8px rgba(6, 182, 212, 0.1);
+}
+
+.page-header__title--fets-roster {
+  color: var(--roster-primary);
+  text-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.page-header__title--fets-calendar {
+  color: var(--calendar-primary);
+  text-shadow: 0 2px 8px rgba(244, 63, 94, 0.1);
+}
+
+.page-header__title--incident-manager {
+  color: var(--incident-primary);
+  text-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
+}
+
+/* ==========================================================================
+   STATUS INDICATORS & BADGES - Colorful Real-time Items
+   ========================================================================== */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.status-badge__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Status colors */
+.status-badge--active {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--roster-primary);
+  border: 1px solid var(--roster-primary);
+}
+
+.status-badge--active .status-badge__dot {
+  background: var(--roster-primary);
+}
+
+.status-badge--pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--unified-accent);
+  border: 1px solid var(--unified-accent);
+}
+
+.status-badge--pending .status-badge__dot {
+  background: var(--unified-accent);
+}
+
+.status-badge--completed {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+
+.status-badge--completed .status-badge__dot {
+  background: #22c55e;
+}
+
+.status-badge--alert {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--incident-primary);
+  border: 1px solid var(--incident-primary);
+}
+
+.status-badge--alert .status-badge__dot {
+  background: var(--incident-primary);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-badge--info {
+  background: rgba(6, 182, 212, 0.1);
+  color: var(--candidate-primary);
+  border: 1px solid var(--candidate-primary);
+}
+
+.status-badge--info .status-badge__dot {
+  background: var(--candidate-primary);
+}
+
+/* ==========================================================================
+   UNIFIED CARD STYLES - Consistent Across Pages
+   ========================================================================== */
+
+.unified-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.unified-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.12),
+    0 8px 20px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.unified-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--unified-border);
+}
+
+.unified-card__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--unified-text);
+}
+
+.unified-card__subtitle {
+  font-size: 0.875rem;
+  color: var(--unified-text-secondary);
+  margin-top: 0.25rem;
+}
+
+/* Color-coded card headers */
+.unified-card--candidate-tracker .unified-card__header {
+  border-bottom-color: var(--candidate-primary);
+}
+
+.unified-card--fets-roster .unified-card__header {
+  border-bottom-color: var(--roster-primary);
+}
+
+.unified-card--fets-calendar .unified-card__header {
+  border-bottom-color: var(--calendar-primary);
+}
+
+.unified-card--incident-manager .unified-card__header {
+  border-bottom-color: var(--incident-primary);
+}
+
+/* ==========================================================================
+   UNIFIED STAT DISPLAY - Consistent Number Formatting
+   ========================================================================== */
+
+.stat-block {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.stat-block:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.8) 100%);
+  transform: scale(1.02);
+}
+
+.stat-block__value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-family: 'Space Grotesk', sans-serif;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-block__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--unified-text-secondary);
+}
+
+/* Color variants */
+.stat-block--candidate-tracker .stat-block__value {
+  background: linear-gradient(135deg, var(--candidate-primary), #0891B2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-block--fets-roster .stat-block__value {
+  background: linear-gradient(135deg, var(--roster-primary), #059669);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-block--fets-calendar .stat-block__value {
+  background: linear-gradient(135deg, var(--calendar-primary), #E11D48);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-block--incident-manager .stat-block__value {
+  background: linear-gradient(135deg, var(--incident-primary), #DC2626);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==========================================================================
+   UNIFIED LIST & TABLE STYLES
+   ========================================================================== */
+
+.unified-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.unified-list__item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.unified-list__item:hover {
+  background: var(--unified-surface);
+  border-left-color: var(--unified-primary);
+}
+
+.unified-list__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.unified-list__content {
+  flex: 1;
+}
+
+.unified-list__title {
+  font-weight: 600;
+  color: var(--unified-text);
+  margin-bottom: 0.25rem;
+}
+
+.unified-list__meta {
+  font-size: 0.875rem;
+  color: var(--unified-text-secondary);
+}
+
+/* ==========================================================================
+   UNIFIED TIMELINE
+   ========================================================================== */
+
+.unified-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.unified-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--unified-primary), transparent);
+  border-radius: 1px;
+}
+
+.unified-timeline__item {
+  position: relative;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--unified-border);
+}
+
+.unified-timeline__item:last-child {
+  border-bottom: none;
+}
+
+.unified-timeline__item::before {
+  content: '';
+  position: absolute;
+  left: -2.5rem;
+  top: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--unified-primary);
+  border: 3px solid white;
+  box-shadow: 0 0 0 3px var(--unified-primary);
+}
+
+.unified-timeline__time {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--unified-accent);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.unified-timeline__title {
+  font-weight: 600;
+  color: var(--unified-text);
+  margin-bottom: 0.25rem;
+}
+
+.unified-timeline__description {
+  font-size: 0.875rem;
+  color: var(--unified-text-secondary);
+}
+
+/* ==========================================================================
+   UNIFIED BUTTONS - Page-Specific Coloring
+   ========================================================================== */
+
+.unified-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Candidate Tracker button */
+.unified-btn--candidate-tracker {
+  background: linear-gradient(135deg, var(--candidate-primary), #0891B2);
+  color: white;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+.unified-btn--candidate-tracker:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
+}
+
+/* FETS Roster button */
+.unified-btn--fets-roster {
+  background: linear-gradient(135deg, var(--roster-primary), #059669);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.unified-btn--fets-roster:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
+/* FETS Calendar button */
+.unified-btn--fets-calendar {
+  background: linear-gradient(135deg, var(--calendar-primary), #E11D48);
+  color: white;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+}
+
+.unified-btn--fets-calendar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(244, 63, 94, 0.4);
+}
+
+/* Incident Manager button */
+.unified-btn--incident-manager {
+  background: linear-gradient(135deg, var(--incident-primary), #DC2626);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.unified-btn--incident-manager:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+}
+
+/* Secondary button */
+.unified-btn--secondary {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1.5px solid var(--unified-border);
+  color: var(--unified-text);
+  backdrop-filter: blur(10px);
+}
+
+.unified-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--unified-primary);
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 1.5rem;
+  }
+
+  .page-header__title {
+    font-size: 1.875rem;
+  }
+
+  .unified-card {
+    padding: 1rem;
+  }
+
+  .stat-block__value {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 1rem;
+  }
+
+  .page-header__title {
+    font-size: 1.5rem;
+  }
+
+  .unified-card {
+    padding: 0.75rem;
+  }
+
+  .stat-block__value {
+    font-size: 1.5rem;
+  }
+
+  .page-header__title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

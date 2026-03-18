@@ -1,0 +1,439 @@
+/* Modern Layout System for FETS Application */
+
+/* Container System */
+.fets-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.fets-container-fluid {
+  width: 100%;
+  padding: 0 1rem;
+}
+
+/* Grid System */
+.fets-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.fets-grid-1 {
+  grid-template-columns: 1fr;
+}
+
+.fets-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.fets-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.fets-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.fets-grid-auto {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Responsive Grid */
+@media (max-width: 1024px) {
+  .fets-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .fets-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .fets-grid-4,
+  .fets-grid-3,
+  .fets-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .fets-grid {
+    gap: 1rem;
+  }
+}
+
+/* Card System */
+.fets-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fets-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.fets-card-header {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.fets-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.fets-card-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
+}
+
+.fets-card-body {
+  flex: 1;
+}
+
+.fets-card-footer {
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Button System */
+.fets-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  min-height: 44px;
+}
+
+.fets-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.fets-btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.fets-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.fets-btn-secondary {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.fets-btn-secondary:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+.fets-btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.fets-btn-success:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.fets-btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+.fets-btn-warning:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.fets-btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.fets-btn-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Button Sizes */
+.fets-btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  min-height: 36px;
+}
+
+.fets-btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  min-height: 52px;
+}
+
+.fets-btn-block {
+  width: 100%;
+}
+
+/* Input System */
+.fets-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #374151;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.fets-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.fets-input:disabled {
+  background-color: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.fets-input-error {
+  border-color: #ef4444;
+}
+
+.fets-input-error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Form Groups */
+.fets-form-group {
+  margin-bottom: 1rem;
+}
+
+.fets-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.fets-help-text {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.fets-error-text {
+  font-size: 0.8125rem;
+  color: #ef4444;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Badge System */
+.fets-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.fets-badge-primary {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.fets-badge-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.fets-badge-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.fets-badge-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.fets-badge-gray {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* Alert System */
+.fets-alert {
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid;
+  margin-bottom: 1rem;
+}
+
+.fets-alert-success {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.fets-alert-warning {
+  background-color: #fffbeb;
+  border-color: #fed7aa;
+  color: #92400e;
+}
+
+.fets-alert-danger {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.fets-alert-info {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+/* Loading States */
+.fets-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.fets-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Utility Classes */
+.fets-text-center {
+  text-align: center;
+}
+
+.fets-text-left {
+  text-align: left;
+}
+
+.fets-text-right {
+  text-align: right;
+}
+
+.fets-hidden {
+  display: none;
+}
+
+.fets-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Spacing Utilities */
+.fets-mt-0 { margin-top: 0; }
+.fets-mt-1 { margin-top: 0.25rem; }
+.fets-mt-2 { margin-top: 0.5rem; }
+.fets-mt-3 { margin-top: 0.75rem; }
+.fets-mt-4 { margin-top: 1rem; }
+.fets-mt-5 { margin-top: 1.25rem; }
+.fets-mt-6 { margin-top: 1.5rem; }
+.fets-mt-8 { margin-top: 2rem; }
+
+.fets-mb-0 { margin-bottom: 0; }
+.fets-mb-1 { margin-bottom: 0.25rem; }
+.fets-mb-2 { margin-bottom: 0.5rem; }
+.fets-mb-3 { margin-bottom: 0.75rem; }
+.fets-mb-4 { margin-bottom: 1rem; }
+.fets-mb-5 { margin-bottom: 1.25rem; }
+.fets-mb-6 { margin-bottom: 1.5rem; }
+.fets-mb-8 { margin-bottom: 2rem; }
+
+.fets-ml-0 { margin-left: 0; }
+.fets-ml-1 { margin-left: 0.25rem; }
+.fets-ml-2 { margin-left: 0.5rem; }
+.fets-ml-3 { margin-left: 0.75rem; }
+.fets-ml-4 { margin-left: 1rem; }
+
+.fets-mr-0 { margin-right: 0; }
+.fets-mr-1 { margin-right: 0.25rem; }
+.fets-mr-2 { margin-right: 0.5rem; }
+.fets-mr-3 { margin-right: 0.75rem; }
+.fets-mr-4 { margin-right: 1rem; }
+
+/* Responsive Utilities */
+@media (max-width: 640px) {
+  .fets-hidden-mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 641px) {
+  .fets-hidden-desktop {
+    display: none;
+  }
+}
+
+/* Print Utilities */
+@media print {
+  .fets-no-print {
+    display: none;
+  }
+}

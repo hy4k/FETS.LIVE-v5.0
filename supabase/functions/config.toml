@@ -1,0 +1,8 @@
+# Supabase Edge Functions Configuration
+# See: https://supabase.com/docs/guides/functions/config
+
+[fets-api]
+verify_jwt = false
+
+[create-staff-user]
+verify_jwt = false

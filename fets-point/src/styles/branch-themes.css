@@ -1,0 +1,883 @@
+/* BRANCH-SPECIFIC VISUAL BRANDING - MULTI-BRANCH MANAGEMENT SYSTEM */
+
+/* ==========================================================================
+   BRANCH THEME VARIABLES
+   ========================================================================== */
+:root {
+  /* Calicut Branch - Warm Yellow Tints */
+  --calicut-primary: #e7bb5a;
+  --calicut-secondary: #ffd700;
+  --calicut-light: #fff8dc;
+  --calicut-glow: rgba(231, 187, 90, 0.2);
+  --calicut-border: rgba(231, 187, 90, 0.3);
+  --calicut-bg-tint: rgba(231, 187, 90, 0.02);
+  --calicut-bg-hover: rgba(231, 187, 90, 0.05);
+  --calicut-card-border: rgba(231, 187, 90, 0.12);
+  --calicut-card-hover: rgba(231, 187, 90, 0.08);
+  --calicut-focus-ring: rgba(231, 187, 90, 0.3);
+
+  /* Cochin Branch - Mango Yellow Accents */
+  --cochin-primary: #ffc107;
+  --cochin-secondary: #ffb300;
+  --cochin-light: #fff8e1;
+  --cochin-glow: rgba(255, 193, 7, 0.2);
+  --cochin-border: rgba(255, 193, 7, 0.3);
+  --cochin-bg-tint: rgba(255, 193, 7, 0.02);
+  --cochin-bg-hover: rgba(255, 193, 7, 0.05);
+  --cochin-card-border: rgba(255, 193, 7, 0.12);
+  --cochin-card-hover: rgba(255, 193, 7, 0.08);
+  --cochin-focus-ring: rgba(255, 193, 7, 0.3);
+
+  /* Kannur Branch - Electric Safety Yellow Accents */
+  --kannur-primary: #ffd600;
+  --kannur-secondary: #ffea00;
+  --kannur-light: #fffde7;
+  --kannur-glow: rgba(255, 214, 0, 0.2);
+  --kannur-border: rgba(255, 214, 0, 0.3);
+  --kannur-bg-tint: rgba(255, 214, 0, 0.02);
+  --kannur-bg-hover: rgba(255, 214, 0, 0.05);
+  --kannur-card-border: rgba(255, 214, 0, 0.12);
+  --kannur-card-hover: rgba(255, 214, 0, 0.08);
+  --kannur-focus-ring: rgba(255, 214, 0, 0.3);
+
+  /* Dashboard Yellow Essence - Unified Base */
+  --dashboard-bg: #FCF8E8;
+  /* Very light cream/yellow essence */
+  --neu-dark-shadow: #DEDAB8;
+  --neu-light-shadow: #FFFFFF;
+
+  /* Global Mode - Blue-Purple Gradient */
+  --global-primary: #3b82f6;
+  --global-secondary: #8b5cf6;
+  --global-light: #f0f9ff;
+  --global-glow: rgba(59, 130, 246, 0.2);
+  --global-border: rgba(59, 130, 246, 0.3);
+  --global-bg-tint: rgba(59, 130, 246, 0.02);
+  --global-bg-hover: rgba(59, 130, 246, 0.05);
+  --global-card-border: rgba(59, 130, 246, 0.12);
+  --global-card-hover: rgba(59, 130, 246, 0.08);
+  --global-focus-ring: rgba(59, 130, 246, 0.3);
+}
+
+/* Base Transition for all branch classes */
+[class*="branch-"] {
+  transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ==========================================================================
+   CALICUT BRANCH THEME - SUBTLE ACCENT STYLING
+   ========================================================================== */
+.branch-calicut {
+  /* Header styling - Subtle neutral base with light accent tints */
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+  border-bottom: 3px solid var(--calicut-primary) !important;
+  box-shadow: 0 4px 20px rgba(231, 187, 90, 0.08) !important;
+}
+
+.branch-calicut .banner-greeting {
+  color: #1f2937 !important;
+}
+
+.branch-calicut .banner-status {
+  color: #6b7280 !important;
+}
+
+.branch-calicut .banner-location {
+  color: #374151 !important;
+  background: rgba(231, 187, 90, 0.1) !important;
+  border: 1px solid rgba(231, 187, 90, 0.2) !important;
+}
+
+.branch-calicut .banner-user-info {
+  color: #374151 !important;
+}
+
+.branch-calicut .banner-icon-button {
+  color: #374151 !important;
+  background: rgba(231, 187, 90, 0.08) !important;
+  border: 1px solid rgba(231, 187, 90, 0.15) !important;
+}
+
+.branch-calicut .banner-icon-button:hover {
+  background: rgba(231, 187, 90, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+/* Widget accent colors */
+.branch-calicut .modern-card {
+  border-color: var(--calicut-border);
+}
+
+.branch-calicut .activity-card:hover {
+  box-shadow: 0 8px 25px var(--calicut-glow);
+}
+
+.branch-calicut .btn-primary {
+  background: linear-gradient(135deg, var(--calicut-primary) 0%, var(--calicut-secondary) 100%);
+  border-color: var(--calicut-primary);
+}
+
+.branch-calicut .status-indicator.positive {
+  background: var(--calicut-primary);
+}
+
+/* Page-Level Background Theming */
+.branch-calicut::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right,
+      var(--calicut-bg-tint) 0%,
+      transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Card and Container Theming */
+.branch-calicut .glass-card,
+.branch-calicut .modern-card,
+.branch-calicut [class*="card"]:not(.candidate-card):not(.activity-card) {
+  border-color: var(--calicut-card-border) !important;
+}
+
+.branch-calicut .glass-card:hover,
+.branch-calicut .modern-card:hover {
+  background: var(--calicut-card-hover) !important;
+  box-shadow: 0 8px 30px var(--calicut-glow) !important;
+}
+
+/* Button Theming */
+.branch-calicut button:not(.btn-danger):not([class*="bg-"]):hover {
+  background: var(--calicut-bg-hover) !important;
+  border-color: var(--calicut-border) !important;
+}
+
+/* Input Focus States */
+.branch-calicut input:focus,
+.branch-calicut textarea:focus,
+.branch-calicut select:focus {
+  outline: 2px solid var(--calicut-focus-ring) !important;
+  outline-offset: 2px;
+  border-color: var(--calicut-primary) !important;
+}
+
+/* Tab Active States */
+.branch-calicut [class*="tab"][class*="active"],
+.branch-calicut .active-tab {
+  box-shadow: 0 0 20px var(--calicut-glow) !important;
+}
+
+/* Smooth Transitions Managed Globally at Line 63 */
+.branch-calicut {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+  border-bottom: 3px solid var(--calicut-primary) !important;
+  box-shadow: 0 4px 20px rgba(231, 187, 90, 0.08) !important;
+}
+
+
+/* ==========================================================================
+   COCHIN BRANCH THEME - SUBTLE ACCENT STYLING
+   ========================================================================== */
+.branch-cochin {
+  /* Header styling - Subtle neutral base with light accent tints */
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+  border-bottom: 3px solid var(--cochin-primary) !important;
+  box-shadow: 0 4px 20px rgba(255, 193, 7, 0.08) !important;
+}
+
+.branch-cochin .banner-greeting {
+  color: #1f2937 !important;
+}
+
+.branch-cochin .banner-status {
+  color: #6b7280 !important;
+}
+
+.branch-cochin .banner-location {
+  color: #374151 !important;
+  background: rgba(255, 193, 7, 0.1) !important;
+  border: 1px solid rgba(255, 193, 7, 0.2) !important;
+}
+
+.branch-cochin .banner-user-info {
+  color: #374151 !important;
+}
+
+.branch-cochin .banner-icon-button {
+  color: #374151 !important;
+  background: rgba(255, 193, 7, 0.08) !important;
+  border: 1px solid rgba(255, 193, 7, 0.15) !important;
+}
+
+.branch-cochin .banner-icon-button:hover {
+  background: rgba(255, 193, 7, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+/* Widget accent colors */
+.branch-cochin .modern-card {
+  border-color: var(--cochin-border);
+}
+
+.branch-cochin .activity-card:hover {
+  box-shadow: 0 8px 25px var(--cochin-glow);
+}
+
+.branch-cochin .btn-primary {
+  background: linear-gradient(135deg, var(--cochin-primary) 0%, var(--cochin-secondary) 100%);
+  border-color: var(--cochin-primary);
+}
+
+.branch-cochin .status-indicator.positive {
+  background: var(--cochin-primary);
+}
+
+/* Page-Level Background Theming */
+.branch-cochin::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right,
+      var(--cochin-bg-tint) 0%,
+      transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Card and Container Theming */
+.branch-cochin .glass-card,
+.branch-cochin .modern-card,
+.branch-cochin [class*="card"]:not(.candidate-card):not(.activity-card) {
+  border-color: var(--cochin-card-border) !important;
+}
+
+.branch-cochin .glass-card:hover,
+.branch-cochin .modern-card:hover {
+  background: var(--cochin-card-hover) !important;
+  box-shadow: 0 8px 30px var(--cochin-glow) !important;
+}
+
+/* Button Theming */
+.branch-cochin button:not(.btn-danger):not([class*="bg-"]):hover {
+  background: var(--cochin-bg-hover) !important;
+  border-color: var(--cochin-border) !important;
+}
+
+/* Input Focus States */
+.branch-cochin input:focus,
+.branch-cochin textarea:focus,
+.branch-cochin select:focus {
+  outline: 2px solid var(--cochin-focus-ring) !important;
+  outline-offset: 2px;
+  border-color: var(--cochin-primary) !important;
+}
+
+/* Tab Active States */
+.branch-cochin [class*="tab"][class*="active"],
+.branch-cochin .active-tab {
+  box-shadow: 0 0 20px var(--cochin-glow) !important;
+}
+
+
+/* ==========================================================================
+   KANNUR BRANCH THEME - SUBTLE ACCENT STYLING
+   ========================================================================== */
+.branch-kannur {
+  /* Header styling - Subtle neutral base with light accent tints */
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+  border-bottom: 3px solid var(--kannur-primary) !important;
+  box-shadow: 0 4px 20px rgba(255, 214, 0, 0.08) !important;
+}
+
+.branch-kannur .banner-greeting {
+  color: #1f2937 !important;
+}
+
+.branch-kannur .banner-status {
+  color: #6b7280 !important;
+}
+
+.branch-kannur .banner-location {
+  color: #374151 !important;
+  background: rgba(255, 214, 0, 0.1) !important;
+  border: 1px solid rgba(255, 214, 0, 0.2) !important;
+}
+
+.branch-kannur .banner-user-info {
+  color: #374151 !important;
+}
+
+.branch-kannur .banner-icon-button {
+  color: #374151 !important;
+  background: rgba(255, 214, 0, 0.08) !important;
+  border: 1px solid rgba(255, 214, 0, 0.15) !important;
+}
+
+.branch-kannur .banner-icon-button:hover {
+  background: rgba(255, 214, 0, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+/* Widget accent colors */
+.branch-kannur .modern-card {
+  border-color: var(--kannur-border);
+}
+
+.branch-kannur .activity-card:hover {
+  box-shadow: 0 8px 25px var(--kannur-glow);
+}
+
+.branch-kannur .btn-primary {
+  background: linear-gradient(135deg, var(--kannur-primary) 0%, var(--kannur-secondary) 100%);
+  border-color: var(--kannur-primary);
+}
+
+.branch-kannur .status-indicator.positive {
+  background: var(--kannur-primary);
+}
+
+/* Page-Level Background Theming */
+.branch-kannur::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right,
+      var(--kannur-bg-tint) 0%,
+      transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Card and Container Theming */
+.branch-kannur .glass-card,
+.branch-kannur .modern-card,
+.branch-kannur [class*="card"]:not(.candidate-card):not(.activity-card) {
+  border-color: var(--kannur-card-border) !important;
+}
+
+.branch-kannur .glass-card:hover,
+.branch-kannur .modern-card:hover {
+  background: var(--kannur-card-hover) !important;
+  box-shadow: 0 8px 30px var(--kannur-glow) !important;
+}
+
+/* Button Theming */
+.branch-kannur button:not(.btn-danger):not([class*="bg-"]):hover {
+  background: var(--kannur-bg-hover) !important;
+  border-color: var(--kannur-border) !important;
+}
+
+/* Input Focus States */
+.branch-kannur input:focus,
+.branch-kannur textarea:focus,
+.branch-kannur select:focus {
+  outline: 2px solid var(--kannur-focus-ring) !important;
+  outline-offset: 2px;
+  border-color: var(--kannur-primary) !important;
+}
+
+/* Tab Active States */
+.branch-kannur [class*="tab"][class*="active"],
+.branch-kannur .active-tab {
+  box-shadow: 0 0 20px var(--kannur-glow) !important;
+}
+
+/* Smooth Transitions Managed Globally at Line 63 */
+.branch-kannur {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+  border-bottom: 3px solid var(--kannur-primary) !important;
+  box-shadow: 0 4px 20px rgba(255, 214, 0, 0.08) !important;
+}
+
+
+/* ==========================================================================
+   GLOBAL MODE THEME
+   ========================================================================== */
+/* ==========================================================================
+   DASHBOARD YELLOW ESSENCE - NEW GLOBAL OVERLAY 
+   Applied to all branches to give the essence of the top banner.
+   ========================================================================== */
+[class*="branch-"] {
+  --bg-neumorphic: var(--dashboard-bg) !important;
+}
+
+/* Update backgrounds for dashboard content */
+.branch-calicut,
+.branch-cochin,
+.branch-kannur {
+  background-color: var(--dashboard-bg) !important;
+}
+
+.branch-global {
+  /* Global mode remains neutral but can have a tint */
+  border-bottom-color: var(--global-border) !important;
+}
+
+.branch-global .banner-greeting {
+  color: #1e3a8a !important;
+}
+
+.branch-global .banner-status {
+  color: #2563eb !important;
+}
+
+.branch-global .banner-location {
+  color: #1e3a8a !important;
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.branch-global .banner-user-info {
+  color: #1e3a8a !important;
+}
+
+.branch-global .banner-icon-button {
+  color: #1e3a8a !important;
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.branch-global .banner-icon-button:hover {
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Widget accent colors */
+.branch-global .modern-card {
+  border-color: var(--global-border);
+}
+
+.branch-global .activity-card:hover {
+  box-shadow: 0 8px 25px var(--global-glow);
+}
+
+.branch-global .btn-primary {
+  background: linear-gradient(135deg, var(--global-primary) 0%, var(--global-secondary) 100%);
+  border-color: var(--global-primary);
+}
+
+.branch-global .status-indicator.positive {
+  background: var(--global-primary);
+}
+
+/* Page-Level Background Theming */
+.branch-global::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right,
+      var(--global-bg-tint) 0%,
+      transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Card and Container Theming */
+.branch-global .glass-card,
+.branch-global .modern-card,
+.branch-global [class*="card"]:not(.candidate-card):not(.activity-card) {
+  border-color: var(--global-card-border) !important;
+}
+
+.branch-global .glass-card:hover,
+.branch-global .modern-card:hover {
+  background: var(--global-card-hover) !important;
+  box-shadow: 0 8px 30px var(--global-glow) !important;
+}
+
+/* Button Theming */
+.branch-global button:not(.btn-danger):not([class*="bg-"]):hover {
+  background: var(--global-bg-hover) !important;
+  border-color: var(--global-border) !important;
+}
+
+/* Input Focus States */
+.branch-global input:focus,
+.branch-global textarea:focus,
+.branch-global select:focus {
+  outline: 2px solid var(--global-focus-ring) !important;
+  outline-offset: 2px;
+  border-color: var(--global-primary) !important;
+}
+
+/* Tab Active States */
+.branch-global [class*="tab"][class*="active"],
+.branch-global .active-tab {
+  box-shadow: 0 0 20px var(--global-glow) !important;
+}
+
+/* Smooth Transitions Managed Globally */
+.branch-global {
+  /* Global mode remains neutral but can have a tint */
+  border-bottom-color: var(--global-border) !important;
+}
+
+
+/* ==========================================================================
+   BRANCH TOGGLE COMPONENT STYLES
+   ========================================================================== */
+.branch-toggle-container {
+  position: relative;
+  z-index: 50;
+}
+
+.branch-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.branch-toggle-button:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.branch-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.branch-indicator.calicut {
+  background: linear-gradient(135deg, var(--calicut-primary) 0%, var(--calicut-secondary) 100%);
+}
+
+.branch-indicator.cochin {
+  background: linear-gradient(135deg, var(--cochin-primary) 0%, var(--cochin-secondary) 100%);
+}
+
+.branch-indicator.kannur {
+  background: linear-gradient(135deg, var(--kannur-primary) 0%, var(--kannur-secondary) 100%);
+}
+
+.branch-indicator.global {
+  background: linear-gradient(135deg, var(--global-primary) 0%, var(--global-secondary) 100%);
+}
+
+.branch-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  width: 200px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.branch-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.branch-option:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateX(4px);
+}
+
+.branch-option.active {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.branch-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.branch-option.disabled:hover {
+  background: none;
+  transform: none;
+}
+
+/* ==========================================================================
+   DUAL VIEW MODE STYLES
+   ========================================================================== */
+.dual-view-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  height: 100%;
+}
+
+.dual-view-panel {
+  position: relative;
+  background: var(--bg-pure-white);
+  border-radius: var(--radius-large);
+  border: 2px solid transparent;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.dual-view-panel.calicut {
+  border-color: var(--calicut-border);
+  box-shadow: 0 4px 20px var(--calicut-glow);
+}
+
+.dual-view-panel.cochin {
+  border-color: var(--cochin-border);
+  box-shadow: 0 4px 20px var(--cochin-glow);
+}
+
+.dual-view-panel.kannur {
+  border-color: var(--kannur-border);
+  box-shadow: 0 4px 20px var(--kannur-glow);
+}
+
+.dual-view-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dual-view-header.calicut {
+  background: linear-gradient(135deg, var(--calicut-light) 0%, rgba(231, 187, 90, 0.1) 100%);
+}
+
+.dual-view-header.cochin {
+  background: linear-gradient(135deg, var(--cochin-light) 0%, rgba(74, 222, 128, 0.1) 100%);
+}
+
+.dual-view-header.kannur {
+  background: linear-gradient(135deg, var(--kannur-light) 0%, rgba(244, 63, 94, 0.1) 100%);
+}
+
+.dual-view-content {
+  padding: 20px;
+  height: calc(100% - 60px);
+  overflow: auto;
+}
+
+/* ==========================================================================
+   BRANCH STATUS BAR STYLES
+   ========================================================================== */
+.branch-status-bar {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 12px 24px;
+  transition: all 0.3s ease;
+}
+
+.status-indicator-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.status-item .icon {
+  width: 16px;
+  height: 16px;
+  color: #6b7280;
+}
+
+.status-value {
+  font-weight: 600;
+  color: #111827;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.good {
+  background: #10b981;
+}
+
+.status-dot.warning {
+  background: #f59e0b;
+}
+
+.status-dot.critical {
+  background: #ef4444;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS FOR BRANCH SYSTEM
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .dual-view-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .branch-toggle-button {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .branch-dropdown {
+    width: 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  .branch-status-bar {
+    padding: 8px 16px;
+  }
+
+  .status-indicator-group {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .status-item {
+    font-size: 0.8rem;
+    gap: 6px;
+  }
+
+  .branch-toggle-button {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+
+  .branch-indicator {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* ==========================================================================
+   BRANCH SWITCHING ANIMATIONS
+   ========================================================================== */
+.branch-switch-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.branch-switch-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 300ms ease;
+}
+
+.branch-switch-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.branch-switch-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 300ms ease;
+}
+
+.branch-content-fade {
+  transition: all 0.3s ease;
+}
+
+.branch-content-fade.switching {
+  opacity: 0.6;
+  transform: scale(0.98);
+}
+
+/* ==========================================================================
+   BRANCH-SPECIFIC WIDGET ENHANCEMENTS
+   ========================================================================== */
+.widget-branch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.widget-branch-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.widget-loading-skeleton {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ==========================================================================
+   BRANCH SWITCHING ANIMATION
+   ========================================================================== */
+.branch-switching {
+  opacity: 0.95;
+  filter: blur(1px);
+  transition: all 0.3s ease;
+}

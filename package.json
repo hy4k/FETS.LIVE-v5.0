@@ -1,0 +1,17 @@
+{
+  "name": "fets-live-migration",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter fets-point dev",
+    "build": "pnpm --filter fets-point build",
+    "lint": "pnpm --filter fets-point lint",
+    "start": "pnpm --filter fets-point preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^17.2.3",
+    "lucide-react": "^0.577.0",
+    "pg": "^8.11.3"
+  }
+}

@@ -1,0 +1,20 @@
+RewriteEngine On
+
+# Serve existing files directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# SPA fallback to index.html for client-side routes
+RewriteRule ^ index.html [L]
+
+# Optional: prevent caching of the HTML entry
+<FilesMatch "^(index\.html)$">
+  <IfModule mod_expires.c>
+    ExpiresActive Off
+  </IfModule>
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+  </IfModule>
+</FilesMatch>

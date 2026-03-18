@@ -1,0 +1,388 @@
+/* ==========================================================================
+   PREMIUM BUTTON MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* Base Premium Button */
+.btn-premium-interactive {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-family: var(--font-primary);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ripple Effect */
+.btn-premium-interactive::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  pointer-events: none;
+}
+
+.btn-premium-interactive:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Shimmer Effect */
+.btn-premium-interactive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.btn-premium-interactive:hover::after {
+  left: 100%;
+}
+
+/* ==========================================================================
+   BUTTON VARIANTS WITH MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* Primary Button - Gradient with Glow */
+.btn-primary-glow {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  color: white;
+  box-shadow:
+    0 4px 16px rgba(99, 102, 241, 0.3),
+    0 2px 8px rgba(99, 102, 241, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-primary-glow:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    0 12px 32px rgba(99, 102, 241, 0.4),
+    0 6px 16px rgba(99, 102, 241, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btn-primary-glow:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow:
+    0 4px 12px rgba(99, 102, 241, 0.25),
+    0 2px 6px rgba(99, 102, 241, 0.15);
+}
+
+/* Secondary Button - Glass with Hover Fill */
+.btn-secondary-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(99, 102, 241, 0.3);
+  color: #6366F1;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-secondary-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.btn-secondary-glass:hover {
+  color: white;
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+}
+
+.btn-secondary-glass:hover::before {
+  opacity: 1;
+}
+
+/* Success Button - Green Pulse */
+.btn-success-pulse {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  color: white;
+  box-shadow:
+    0 4px 16px rgba(5, 150, 105, 0.3),
+    0 2px 8px rgba(5, 150, 105, 0.2);
+  animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes subtle-pulse {
+  0%, 100% {
+    box-shadow:
+      0 4px 16px rgba(5, 150, 105, 0.3),
+      0 2px 8px rgba(5, 150, 105, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 6px 20px rgba(5, 150, 105, 0.4),
+      0 3px 10px rgba(5, 150, 105, 0.3);
+  }
+}
+
+.btn-success-pulse:hover {
+  transform: translateY(-3px) scale(1.02);
+  animation: none;
+  box-shadow:
+    0 12px 32px rgba(5, 150, 105, 0.4),
+    0 6px 16px rgba(5, 150, 105, 0.3);
+}
+
+/* Danger Button - Red with Shake on Hover */
+.btn-danger-shake {
+  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+  color: white;
+  box-shadow:
+    0 4px 16px rgba(220, 38, 38, 0.3),
+    0 2px 8px rgba(220, 38, 38, 0.2);
+}
+
+.btn-danger-shake:hover {
+  animation: shake 0.5s ease;
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 32px rgba(220, 38, 38, 0.4),
+    0 6px 16px rgba(220, 38, 38, 0.3);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateY(-2px) translateX(0); }
+  25% { transform: translateY(-2px) translateX(-3px); }
+  75% { transform: translateY(-2px) translateX(3px); }
+}
+
+/* Ghost Button - Border Morph */
+.btn-ghost-morph {
+  background: transparent;
+  border: 2px solid #6366F1;
+  color: #6366F1;
+  position: relative;
+}
+
+.btn-ghost-morph::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  padding: 2px;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6, #EC4899, #6366F1);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: rotate-border 3s linear infinite;
+}
+
+.btn-ghost-morph:hover::before {
+  opacity: 1;
+}
+
+@keyframes rotate-border {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.btn-ghost-morph:hover {
+  color: #8B5CF6;
+  transform: translateY(-2px);
+}
+
+/* Icon Button - Bounce */
+.btn-icon-bounce {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #6366F1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon-bounce svg {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-icon-bounce:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.btn-icon-bounce:hover svg {
+  transform: scale(1.2) rotate(15deg);
+}
+
+.btn-icon-bounce:active {
+  transform: translateY(-2px) scale(0.95);
+}
+
+/* Loading Button */
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.btn-loading::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-loading span {
+  opacity: 0;
+}
+
+/* ==========================================================================
+   BUTTON GROUPS WITH MICRO-INTERACTIONS
+   ========================================================================== */
+
+.btn-group {
+  display: inline-flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-group .btn-premium-interactive {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-group .btn-premium-interactive:hover {
+  z-index: 2;
+}
+
+/* Stacked Button Group */
+.btn-group-stacked {
+  display: inline-flex;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-group-stacked .btn-premium-interactive {
+  border-radius: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-group-stacked .btn-premium-interactive:first-child {
+  border-radius: 14px 0 0 14px;
+}
+
+.btn-group-stacked .btn-premium-interactive:last-child {
+  border-radius: 0 14px 14px 0;
+  border-right: none;
+}
+
+.btn-group-stacked .btn-premium-interactive:hover {
+  flex-grow: 1.1;
+  z-index: 2;
+}
+
+/* ==========================================================================
+   BUTTON SIZES
+   ========================================================================== */
+
+.btn-xs {
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  border-radius: 10px;
+}
+
+.btn-sm {
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  border-radius: 12px;
+}
+
+.btn-md {
+  padding: 14px 28px;
+  font-size: 0.9375rem;
+  border-radius: 14px;
+}
+
+.btn-lg {
+  padding: 16px 36px;
+  font-size: 1rem;
+  border-radius: 16px;
+}
+
+.btn-xl {
+  padding: 20px 44px;
+  font-size: 1.125rem;
+  border-radius: 18px;
+}
+
+/* ==========================================================================
+   DISABLED STATE
+   ========================================================================== */
+
+.btn-premium-interactive:disabled,
+.btn-premium-interactive.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none !important;
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+.btn-premium-interactive:focus-visible {
+  outline: 3px solid rgba(99, 102, 241, 0.4);
+  outline-offset: 3px;
+}
+
+/* Reduce Motion for Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .btn-premium-interactive,
+  .btn-premium-interactive::before,
+  .btn-premium-interactive::after {
+    animation: none;
+    transition: none;
+  }
+}

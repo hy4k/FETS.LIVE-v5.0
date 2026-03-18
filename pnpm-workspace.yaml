@@ -1,0 +1,7 @@
+packages:
+  - fets-point
+
+ignoredBuiltDependencies:
+  - esbuild
+  - msw
+  - supabase

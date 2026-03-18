@@ -1,0 +1,398 @@
+/* ==========================================================================
+   PREMIUM GLASSMORPHIC CARD SYSTEM - ENHANCED DESIGN
+   ========================================================================== */
+
+/* Premium Glassmorphic Card Base */
+.premium-glass-card {
+  /* Premium Frosted Glass Background */
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.7) 100%
+  );
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+
+  /* Enhanced Border with Subtle Gradient */
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+
+  /* Premium Multi-Layer Shadow System */
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Premium Hover State with Elevation */
+.premium-glass-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Shimmer Effect on Hover */
+.premium-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: left 0.6s ease;
+  z-index: 1;
+}
+
+.premium-glass-card:hover::before {
+  left: 100%;
+}
+
+.premium-glass-card__content {
+  position: relative;
+  z-index: 2;
+  padding: 28px;
+}
+
+/* ==========================================================================
+   ELEVATION SYSTEM - SHADOW LAYERING
+   ========================================================================== */
+
+.elevation-1 {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.elevation-2 {
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.elevation-3 {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.elevation-4 {
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.elevation-5 {
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.14),
+    0 16px 48px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Hover Elevation Transitions */
+.elevation-1:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08); }
+.elevation-2:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6); }
+.elevation-3:hover { box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14), 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.7); }
+
+/* ==========================================================================
+   PREMIUM CARD VARIANTS
+   ========================================================================== */
+
+/* Gradient Border Card */
+.gradient-border-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+  backdrop-filter: blur(20px);
+  position: relative;
+  border-radius: 20px;
+  padding: 2px;
+  overflow: hidden;
+}
+
+.gradient-border-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 2px;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6, #EC4899);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.gradient-border-card:hover::before {
+  opacity: 1;
+}
+
+.gradient-border-card__inner {
+  background: white;
+  border-radius: 18px;
+  padding: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Accent Glow Card */
+.accent-glow-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 20px;
+  padding: 28px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+.accent-glow-card::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  filter: blur(20px);
+}
+
+.accent-glow-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.accent-glow-card:hover::after {
+  opacity: 0.3;
+}
+
+/* Frosted Premium Card */
+.frosted-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  backdrop-filter: blur(32px) saturate(2);
+  -webkit-backdrop-filter: blur(32px) saturate(2);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.frosted-card:hover {
+  transform: translateY(-5px);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 1);
+}
+
+/* ==========================================================================
+   KPI STAT CARDS - ENHANCED DESIGN
+   ========================================================================== */
+
+.premium-kpi-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.88) 100%);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 32px 28px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.premium-kpi-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.1),
+    0 12px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* Gradient Accent Bar */
+.premium-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.premium-kpi-card:hover::before {
+  opacity: 1;
+}
+
+.premium-kpi-card__icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.premium-kpi-card:hover .premium-kpi-card__icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Icon Color Variants */
+.premium-kpi-card__icon--primary {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  color: white;
+}
+
+.premium-kpi-card__icon--success {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  color: white;
+}
+
+.premium-kpi-card__icon--warning {
+  background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+  color: white;
+}
+
+.premium-kpi-card__icon--danger {
+  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+  color: white;
+}
+
+.premium-kpi-card__value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: var(--font-primary);
+  letter-spacing: -0.02em;
+}
+
+.premium-kpi-card__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-primary);
+}
+
+.premium-kpi-card__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 12px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.premium-kpi-card__trend--up {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.premium-kpi-card__trend--down {
+  background: rgba(220, 38, 38, 0.1);
+  color: #DC2626;
+}
+
+/* ==========================================================================
+   RESPONSIVE CARD ADJUSTMENTS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .premium-glass-card__content {
+    padding: 20px;
+  }
+
+  .premium-kpi-card {
+    padding: 24px 20px;
+    min-height: 140px;
+  }
+
+  .premium-kpi-card__icon {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 16px;
+  }
+
+  .premium-kpi-card__value {
+    font-size: 2rem;
+  }
+
+  .frosted-card {
+    padding: 24px;
+    border-radius: 20px;
+  }
+
+  .gradient-border-card__inner {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .premium-glass-card__content {
+    padding: 16px;
+  }
+
+  .premium-kpi-card {
+    padding: 20px 16px;
+    min-height: 130px;
+  }
+
+  .premium-kpi-card__icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .premium-kpi-card__value {
+    font-size: 1.75rem;
+  }
+}
