@@ -158,7 +158,7 @@ function AppContent() {
 
   return (
     <div className={`golden-theme min-h-screen h-screen flex flex-col overflow-hidden relative ${getBranchTheme(activeBranch)}`}>
-      {isMobile && !isFullscreenPage && <div className="h-safe-top bg-[#FACC15] w-full flex-none" />}
+      {isMobile && !isFullscreenPage && <div className="h-safe-top bg-[#1a3a3d] w-full flex-none" />}
 
       {!isFullscreenPage && !isMobile && (
         <div className="flex-none bg-[#e0e5ec] relative z-50">
@@ -166,7 +166,7 @@ function AppContent() {
         </div>
       )}
 
-      <div className={`flex-1 scroll-touch relative ${isFullscreenPage ? '' : (isMobile ? 'pt-0' : 'pt-4 px-4 md:px-8 pb-8')}`}>
+      <div className={`flex-1 overflow-y-auto mobile-hide-scrollbar relative ${isFullscreenPage ? '' : (isMobile ? 'pt-0' : 'pt-4 px-4 md:px-8 pb-8')}`}>
         {renderContent()}
       </div>
 
