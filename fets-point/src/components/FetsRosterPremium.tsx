@@ -649,22 +649,18 @@ export function FetsRosterPremium() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
-      let profileQuery = supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('staff_profiles')
         .select('id, user_id, full_name, role, email, department, branch_assigned')
         .not('full_name', 'in', '("MITHUN","NIYAS","Mithun","Niyas")')
+        .order('full_name')
 
-      if (activeBranch === 'calicut') profileQuery = profileQuery.eq('branch_assigned', 'calicut')
-      else if (activeBranch === 'cochin') profileQuery = profileQuery.eq('branch_assigned', 'cochin')
-
-      const { data: profiles, error: profilesError } = await profileQuery.order('full_name')
       if (profilesError) throw profilesError
 
       const mappedProfiles: StaffProfile[] = (profiles || []).map(p => ({
         id: p.id, user_id: p.user_id, full_name: p.full_name,
         role: p.role, email: p.email || '', department: p.department, branch_assigned: p.branch_assigned
       } as StaffProfile))
-      setStaffProfiles(mappedProfiles)
 
       const { startDate, endDate } = getViewDateRange()
       const { data: scheduleData, error: scheduleError } = await supabase
@@ -673,8 +669,29 @@ export function FetsRosterPremium() {
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
         .order('date')
+        
       if (scheduleError) throw scheduleError
-      setSchedules(scheduleData || [])
+      
+      const sData = scheduleData || []
+
+      const relevantProfiles = mappedProfiles.filter(p => {
+        if (activeBranch === 'global') return true;
+        if (p.branch_assigned === activeBranch) return true;
+        
+        // They are not in the current activeBranch.
+        // Include them if they are an "old staff" (no branch assigned or inactive) AND have a shift this month.
+        const isUnassigned = !p.branch_assigned || p.branch_assigned.trim() === '' || p.branch_assigned === 'inactive';
+        const hasShift = sData.some(s => s.profile_id === p.id);
+        
+        if (isUnassigned && hasShift) return true;
+        return false;
+      })
+
+      setStaffProfiles(relevantProfiles)
+      
+      const relevantProfileIds = new Set(relevantProfiles.map(p => p.id))
+      const relevantSchedules = sData.filter(s => relevantProfileIds.has(s.profile_id))
+      setSchedules(relevantSchedules)
 
       const { data: requestData, error: requestError } = await supabase
         .from('leave_requests').select('*').order('created_at', { ascending: false })

@@ -39,7 +39,8 @@ export const useDashboardStats = () => {
         applyBranchFilter(supabase.from('social_posts').select('*', { count: 'exact', head: true }).gte('created_at', `${today}T00:00:00`), activeBranch),
         // applyBranchFilter(supabase.from('chat_messages').select('*', { count: 'exact', head: true }).gte('created_at', `${today}T00:00:00`), activeBranch),
         applyBranchFilter(supabase.from('incidents').select('*', { count: 'exact', head: true }).neq('status', 'closed'), activeBranch),
-        applyBranchFilter(supabase.from('calendar_sessions').select('*').eq('date', today), activeBranch),
+        // Fetch calendar sessions for ALL branches, we will filter locally to handle legacy null branch_location
+        supabase.from('calendar_sessions').select('*').eq('date', today),
       ])
 
       const todaysRoster = todaysRosterData && todaysRosterData.length > 0

@@ -293,16 +293,29 @@ export function Header({ isMobile = false, sidebarOpen = false, setSidebarOpen, 
                   ))}
 
                   {isMithun && (
-                    <button
-                      onClick={() => { setActiveTab?.('user-management'); setSidebarOpen?.(false); setShowManagementMenu(false); }}
-                      className="w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-white/5 text-white/80"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Shield size={14} className="text-white/40" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">User Management</span>
-                      </div>
-                      <ChevronRight size={12} className="opacity-20" />
-                    </button>
+                    <>
+                      <div className="h-px bg-white/5 my-1.5" />
+                      <button
+                        onClick={() => { setActiveTab?.('candidate-tracker'); setSidebarOpen?.(false); setShowManagementMenu(false); }}
+                        className="w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-white/5 text-white/80"
+                      >
+                        <div className="flex items-center gap-2">
+                          <ClipboardList size={14} className="text-cyan-400" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Fets Register</span>
+                        </div>
+                        <ChevronRight size={12} className="opacity-20" />
+                      </button>
+                      <button
+                        onClick={() => { setActiveTab?.('user-management'); setSidebarOpen?.(false); setShowManagementMenu(false); }}
+                        className="w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-white/5 text-white/80"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Shield size={14} className="text-white/40" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">User Management</span>
+                        </div>
+                        <ChevronRight size={12} className="opacity-20" />
+                      </button>
+                    </>
                   )}
                 </div>
               </motion.div>

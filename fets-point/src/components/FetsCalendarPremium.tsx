@@ -88,7 +88,7 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string; i
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const normalizeClientName = (name: string): string => {
-  const u = name.toUpperCase()
+  const u = (name || '').toUpperCase()
   if (u.includes('PEARSON') || u.includes('VUE')) return 'PEARSON'
   if (u.includes('CELPIP'))    return 'CELPIP'
   if (u.includes('CMA'))       return 'CMA'
@@ -103,7 +103,7 @@ const getExamColor = (clientName: string) =>
   EXAM_COLORS[normalizeClientName(clientName)] ?? EXAM_COLORS['OTHER']
 
 const getShortClient = (name: string) => {
-  const n = name.toUpperCase()
+  const n = (name || '').toUpperCase()
   if (n.includes('PEARSON') || n.includes('VUE')) return 'PV'
   if (n.includes('PROMETRIC')) return 'PRO'
   if (n.includes('PSI'))       return 'PSI'

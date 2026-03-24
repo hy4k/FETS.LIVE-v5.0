@@ -2,13 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Users, Activity, CheckCircle, Sparkles,
-    Settings, ChevronRight, ChevronDown, Bell, AlertTriangle, Shield,
+    Settings, ChevronRight, ChevronDown, Bell, AlertTriangle, Shield, ClipboardList,
     CheckCircle2, AlertCircle, Star, MessageSquare, Search, X,
     ExternalLink, Globe, TrendingUp, Calendar, MapPin,
     Building2, Clock, Zap, Lock, Unlock, Key, Copy,
     Eye, EyeOff, Plus, Trash2, Crown, Database, Briefcase,
     Server, ShieldCheck, ArrowUpRight, BookOpen, Phone,
-    Layers, BarChart3, RefreshCw, FileText, Settings2, Brain, PackageSearch, ArrowRight
+    Layers, BarChart3, RefreshCw, FileText, Settings2, Brain, PackageSearch, ArrowRight,
+    Grid, ChevronUp
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useBranch } from '../hooks/useBranch'
@@ -102,7 +103,8 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
     const [selectedVaultEntry, setSelectedVaultEntry] = useState<any | null>(null)
     const [isEditingVault, setIsEditingVault] = useState(false)
     const [isDeletingVault, setIsDeletingVault] = useState(false)
-    const [editForm, setEditForm] = useState({ title: '', category: '', type: '', content: '' })
+    const [isAddingVault, setIsAddingVault] = useState(false)
+    const [editForm, setEditForm] = useState({ title: '', category: '', type: '', content: '', username: '', password: '', site_id: '', url: '' })
     const [pendingRequests, setPendingRequests] = useState<any[]>([])
 
     const notices = useMemo(() => {
@@ -153,11 +155,17 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                 .eq('date', today)
                 .not('check_in', 'is', null)
             if (attendance) {
-                setStaffPresent(attendance.map((a: any) => ({
-                    name: a.staff_profiles?.full_name || 'Staff',
-                    branch: a.branch_location || activeBranch,
-                    check_in: a.check_in
-                })))
+                setStaffPresent(attendance
+                    .filter((a: any) => {
+                        const loc = (a.branch_location || 'calicut').toLowerCase()
+                        return activeBranch === 'global' || loc === activeBranch.toLowerCase()
+                    })
+                    .map((a: any) => ({
+                        name: a.staff_profiles?.full_name || 'Staff',
+                        branch: a.branch_location || activeBranch,
+                        check_in: a.check_in
+                    }))
+                )
             }
         } catch (e) {
             console.error('Analysis load failed', e)
@@ -264,18 +272,40 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
     }
 
     const updateVaultEntry = async () => {
-        if (!selectedVaultEntry) return
         try {
-            const { error } = await supabase
-                .from('fets_vault')
-                .update(editForm)
-                .eq('id', selectedVaultEntry.id)
-            
-            if (error) throw error
-            toast.success('Entry updated')
+            const entryData = {
+                title: editForm.title,
+                category: editForm.category,
+                type: editForm.type,
+                notes: editForm.content,
+                username: editForm.username,
+                password: editForm.password,
+                site_id: editForm.site_id,
+                url: editForm.url,
+                user_id: user?.id
+            }
+
+            if (isAddingVault) {
+                const { error } = await supabase.from('fets_vault').insert([entryData])
+                if (error) throw error
+                toast.success('Entry secured in vault')
+            } else {
+                if (!selectedVaultEntry) return
+                const { error } = await supabase
+                    .from('fets_vault')
+                    .update(entryData)
+                    .eq('id', selectedVaultEntry.id)
+                if (error) throw error
+                toast.success('Entry updated')
+            }
             setIsEditingVault(false)
-            setSelectedVaultEntry({ ...selectedVaultEntry, ...editForm })
+            setIsAddingVault(false)
             fetchVault()
+            if (!isAddingVault) {
+                setSelectedVaultEntry({ ...selectedVaultEntry, ...entryData })
+            } else {
+                setSelectedVaultEntry(null)
+            }
         } catch (err: any) {
             toast.error(err.message)
         }
@@ -287,9 +317,22 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
             title: item.title || '',
             category: item.category || '',
             type: item.type || '',
-            content: item.content || ''
+            content: item.content || item.notes || '',
+            username: item.username || '',
+            password: item.password || '',
+            site_id: item.site_id || '',
+            url: item.url || ''
         })
         setIsEditingVault(false)
+        setIsAddingVault(false)
+    }
+
+    const openAddVault = () => {
+        setIsAddingVault(true)
+        setSelectedVaultEntry({ id: 'new', title: 'New Entry' })
+        setEditForm({ title: '', category: '', type: '', content: '', username: '', password: '', site_id: '', url: '' })
+        setIsEditingVault(true)
+        setIsDeletingVault(false)
     }
 
     // Today's exams grouped by center
@@ -308,8 +351,17 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
         e.category?.toLowerCase().includes(vaultSearch.toLowerCase())
     )
 
-    const totalCandidates = (dashboardData?.todaysExams || []).reduce((s: number, e: any) => s + (e.candidate_count || 0), 0)
-    const totalSessions = dashboardData?.todaysExams?.length || 0
+    const filteredTodaysExams = useMemo(() => {
+        return (dashboardData?.todaysExams || []).filter((exam: any) => {
+            if (activeBranch === 'global') return true;
+            // Handle legacy Calicut data with no branch, assume Calicut
+            const loc = (exam.branch_location || exam.location || 'calicut').toLowerCase();
+            return loc === activeBranch.toLowerCase();
+        });
+    }, [dashboardData?.todaysExams, activeBranch]);
+
+    const totalCandidates = filteredTodaysExams.reduce((s: number, e: any) => s + (e.candidate_count || 0), 0)
+    const totalSessions = filteredTodaysExams.length
     const healthColor = opsMetrics.healthScore >= 80 ? '#10b981' : opsMetrics.healthScore >= 50 ? '#f59e0b' : '#ef4444'
 
     if (isLoadingStats || isLoadingSchedule) {
@@ -488,6 +540,16 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                                                         <>
                                                             <div className="h-px bg-white/5 my-1.5" />
                                                             <button
+                                                                onClick={() => { onNavigate?.('candidate-tracker'); setShowManagementMenu(false); }}
+                                                                className="w-full flex items-center justify-between p-2 rounded-sm transition-all hover:bg-white/5 text-white/80"
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <ClipboardList size={12} className="text-cyan-400" />
+                                                                    <span className="text-[9px] font-bold uppercase tracking-wider">Fets Register</span>
+                                                                </div>
+                                                                <ChevronRight size={10} className="opacity-20" />
+                                                            </button>
+                                                            <button
                                                                 onClick={() => { onNavigate?.('user-management'); setShowManagementMenu(false); }}
                                                                 className="w-full flex items-center justify-between p-2 rounded-sm transition-all hover:bg-white/5 text-white/80"
                                                             >
@@ -580,72 +642,64 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                 )}
 
                 {/* ═══════════════════════════════════════════════════════
-                    TODAY'S OPS GLIMPSE — Stat Cards
+                    TODAY'S OPS GLIMPSE & QUICK LAUNCH
                 ═══════════════════════════════════════════════════════ */}
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12">
                     {[
                         { label: 'Sessions Today', value: totalSessions, icon: Calendar, color: '#FACC15', sub: `${activeBranch !== 'global' ? activeBranch : 'all centres'}` },
                         { label: 'Candidates', value: totalCandidates, icon: Users, color: '#BADFE7', sub: 'registered today' },
                         { label: 'Staff Present', value: staffPresent.length, icon: CheckCircle2, color: '#C2EDCE', sub: 'checked in' },
-                        { label: 'Ops Health', value: `${opsMetrics.healthScore}%`, icon: Activity, color: healthColor, sub: opsMetrics.topIssue },
                     ].map((stat, i) => (
                         <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.1 }}
-                            className="sov-card group relative overflow-hidden">
+                            className="sov-card group relative overflow-hidden h-[160px] flex flex-col justify-between">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#FACC15]/5 to-transparent blur-3xl -mr-16 -mt-16 group-hover:from-[#FACC15]/10 transition-all duration-500" />
                             
-                            <div className="relative z-10 flex items-start justify-between mb-6">
-                                <div className="w-12 h-12 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#FACC15]/40 transition-all duration-500">
-                                    <stat.icon size={20} style={{ color: stat.color }} className="opacity-70 group-hover:opacity-100 transition-opacity" />
+                            <div className="relative z-10 flex items-start justify-between">
+                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#FACC15]/40 transition-all duration-500">
+                                    <stat.icon size={18} style={{ color: stat.color }} className="opacity-70 group-hover:opacity-100 transition-opacity" />
                                 </div>
                                 <ArrowUpRight size={14} className="text-white/10 group-hover:text-[#FACC15] transition-all" />
                             </div>
                             
-                            <div className="relative z-10">
-                                <div className="text-4xl font-bold tracking-tighter text-white mb-1 group-hover:text-[#FACC15] transition-colors">{stat.value}</div>
-                                <div className="sov-label opacity-60 group-hover:opacity-100 transition-opacity">{stat.label}</div>
-                                <div className="text-[9px] text-white/20 mt-2 uppercase tracking-[0.2em] font-medium">{stat.sub}</div>
+                            <div className="relative z-10 mt-auto">
+                                <div className="text-3xl md:text-4xl font-bold tracking-tighter text-white mb-1 group-hover:text-[#FACC15] transition-colors leading-none">{stat.value}</div>
+                                <div className="text-[10px] md:text-sm font-black text-white/60 tracking-wider uppercase group-hover:opacity-100 transition-opacity leading-none mt-2">{stat.label}</div>
+                                <div className="text-[8px] md:text-[9px] text-white/20 mt-1.5 uppercase tracking-widest font-bold leading-none">{stat.sub}</div>
                             </div>
                         </motion.div>
                     ))}
-                </motion.div>
 
-                {/* ═══════════════════════════════════════════════════════
-                    QUICK LAUNCH — External Portals
-                ═══════════════════════════════════════════════════════ */}
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                    className="mb-12">
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="w-12 h-12 rounded-sm bg-blue-500/10 flex items-center justify-center">
-                            <ExternalLink size={20} className="text-blue-400" />
+                    {/* Quick Launch (4th Box) */}
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                        className="sov-card group relative overflow-hidden h-[160px] flex flex-col justify-between p-3 border-[#FACC15]/10 hover:border-[#FACC15]/30 transition-all">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <div className="text-[8px] md:text-[9px] font-black text-white/60 tracking-wider uppercase flex items-center gap-1.5">
+                                <ExternalLink size={10} className="text-[#FACC15]" />
+                                Quick Launch
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-white tracking-tight">Quick Launch</h3>
-                            <p className="sov-label opacity-40 mt-1">Direct access to partner nodes</p>
+                        <div className="grid grid-cols-3 gap-1 md:gap-1.5 h-full content-start">
+                            {portals.slice(0, 6).map((portal, i) => (
+                                <a
+                                    key={i}
+                                    href={portal.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex flex-col items-center justify-center py-2 px-1 bg-white/5 rounded-lg hover:bg-[#FACC15]/10 group/portal transition-colors aspect-square border border-transparent hover:border-white/10"
+                                >
+                                    <div className="w-4 h-4 md:w-6 md:h-6 mb-1.5 flex items-center justify-center">
+                                        <img src={portal.logo} alt={portal.name} className="max-w-full max-h-full object-contain opacity-60 group-hover/portal:opacity-100 transition-opacity" referrerPolicy="no-referrer" 
+                                            onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${portal.name}&background=121214&color=f6c810` }}
+                                        />
+                                    </div>
+                                    <div className="text-[5px] md:text-[6px] font-bold text-white/30 group-hover/portal:text-[#FACC15] uppercase tracking-widest text-center leading-none truncate w-full px-0.5">
+                                        {portal.name}
+                                    </div>
+                                </a>
+                            ))}
                         </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        {portals.map((portal, i) => (
-                            <motion.a
-                                key={i}
-                                href={portal.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.35 + i * 0.05 }}
-                                className="sov-card group flex flex-col items-center justify-center text-center p-6 hover:border-[#FACC15]/40 transition-all duration-500"
-                            >
-                                <div className="w-16 h-16 mb-4 flex items-center justify-center p-2 bg-white/5 rounded-xl group-hover:bg-white/10 transition-all duration-500">
-                                    <img src={portal.logo} alt={portal.name} className="max-w-full max-h-full object-contain opacity-80 group-hover:opacity-100 transition-all" referrerPolicy="no-referrer" 
-                                        onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${portal.name}&background=121214&color=f6c810` }}
-                                    />
-                                </div>
-                                <div className="text-[10px] font-bold text-white/60 group-hover:text-[#FACC15] uppercase tracking-widest transition-colors">{portal.name}</div>
-                            </motion.a>
-                        ))}
-                    </div>
+                    </motion.div>
                 </motion.div>
 
                 {/* ═══════════════════════════════════════════════════════
@@ -654,252 +708,270 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="sov-card mb-12 relative overflow-hidden"
+                    transition={{ delay: 0.2 }}
+                    className="mb-12"
                 >
-                    {/* Background ambient glow */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-64 bg-gradient-to-b from-[#FACC15]/5 to-transparent blur-3xl pointer-events-none" />
-
-                    <div 
-                        className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer group"
-                        onClick={() => setIsVaultCollapsed(!isVaultCollapsed)}
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-sm bg-[#FACC15]/10 flex items-center justify-center group-hover:bg-[#FACC15]/20 transition-all">
-                                <ShieldCheck size={20} className="text-[#FACC15]" />
+                    <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-4 group">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-sm bg-[#FACC15]/10 flex items-center justify-center border border-[#FACC15]/20">
+                                <ShieldCheck size={16} className="text-[#FACC15]" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
-                                    F-Vault
-                                    <ChevronDown size={16} className={`text-white/20 transition-transform duration-500 ${!isVaultCollapsed ? 'rotate-180' : ''}`} />
-                                </h3>
-                                <p className="sov-label opacity-40 mt-1">Encrypted document repository // {isVaultCollapsed ? 'Collapsed' : 'Expanded'}</p>
+                                <h3 className="text-xl font-black text-white tracking-tighter uppercase group-hover:text-[#FACC15] transition-colors leading-none">F-Vault</h3>
+                                <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mt-1.5 hidden md:block">Secure Document Repository ({vaultEntries.length})</p>
                             </div>
                         </div>
-
-                        {!isVaultCollapsed && (
-                            <div className="flex flex-wrap items-center gap-4" onClick={(e) => e.stopPropagation()}>
-                                {/* Search bar */}
-                                <div className="relative group/search">
-                                    <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within/search:text-[#FACC15] transition-colors" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search vault..."
-                                        value={vaultSearch}
-                                        onChange={(e) => setVaultSearch(e.target.value)}
-                                        className="bg-black/40 border border-white/5 rounded-sm pl-10 pr-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-white/10 focus:outline-none focus:border-[#FACC15]/40 w-full md:w-64 transition-all"
-                                    />
-                                </div>
+                        <div className="flex items-center gap-3">
+                            <div className="relative hidden md:block group/search mr-2">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-focus-within/search:text-[#FACC15] transition-colors" />
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    value={vaultSearch}
+                                    onChange={(e) => setVaultSearch(e.target.value)}
+                                    className="bg-black/40 border border-white/5 rounded-sm pl-8 pr-3 py-1.5 text-[10px] uppercase font-bold text-white focus:outline-none focus:border-[#FACC15]/40 w-48 transition-all"
+                                />
                             </div>
-                        )}
+                            <button 
+                                onClick={openAddVault}
+                                className="px-4 py-2 flex items-center gap-1.5 bg-[#FACC15]/10 text-[#FACC15] border border-[#FACC15]/20 hover:bg-[#FACC15]/20 hover:border-[#FACC15]/60 rounded-sm text-[9px] uppercase font-bold tracking-widest transition-all"
+                            >
+                                <Plus size={12} /> Add Asset
+                            </button>
+                        </div>
                     </div>
 
-                    <AnimatePresence>
-                        {!isVaultCollapsed && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.5, ease: "easeInOut" }}
-                                className="overflow-hidden"
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                        {(showAllVault ? filteredVault : filteredVault.slice(0, 8)).map((item: any, i: number) => (
+                            <motion.div key={item.id || i}
+                                onClick={() => openVaultDetails(item)}
+                                className="sov-card h-[160px] flex flex-col justify-between cursor-pointer hover:border-[#FACC15]/40 transition-all duration-300 group"
                             >
-                                <div className="pt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                    {(showAllVault ? filteredVault : filteredVault.slice(0, 4)).map((item: any, i: number) => (
-                                        <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            onClick={() => openVaultDetails(item)}
-                                            className="group bg-black/40 border border-white/5 p-5 rounded-sm hover:border-[#FACC15]/40 transition-all duration-500 cursor-pointer">
-                                            <div className="flex items-start justify-between mb-6">
-                                                <div className="w-10 h-10 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#FACC15]/20 transition-all">
-                                                    <FileText size={18} className="text-[#FACC15] opacity-60 group-hover:opacity-100 transition-opacity" />
-                                                </div>
-                                                <div className="px-2 py-1 bg-white/5 rounded-sm text-[8px] font-bold text-white/20 uppercase tracking-widest">
-                                                    {item.type || 'DOC'}
-                                                </div>
-                                            </div>
-                                            <div className="text-sm font-bold text-white/80 mb-2 group-hover:text-white transition-colors">{item.title}</div>
-                                            <div className="text-[10px] text-white/20 uppercase tracking-widest font-bold mb-4">{item.category}</div>
-                                            <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                                                <div className="text-[9px] text-white/30 font-medium">{item.date || '12 MAR 2026'}</div>
-                                                <ArrowUpRight size={12} className="text-white/10 group-hover:text-[#FACC15] transition-all" />
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                                
-                                {filteredVault.length > 4 && (
-                                    <div className="mt-8 flex justify-center">
-                                        <button 
-                                            onClick={() => setShowAllVault(!showAllVault)}
-                                            className="flex items-center gap-2 px-6 py-2 bg-white/5 hover:bg-[#FACC15]/10 border border-white/10 hover:border-[#FACC15]/40 rounded-full transition-all group"
-                                        >
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-hover:text-[#FACC15]">
-                                                {showAllVault ? 'Show Less' : `Show All (${filteredVault.length})`}
-                                            </span>
-                                            <ChevronDown size={14} className={`text-white/20 group-hover:text-[#FACC15] transition-transform ${showAllVault ? 'rotate-180' : ''}`} />
-                                        </button>
+                                <div className="flex items-start justify-between">
+                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#FACC15]/20 group-hover:bg-[#FACC15]/5 transition-all">
+                                        <FileText size={16} className="text-white/40 group-hover:text-[#FACC15] transition-colors" />
                                     </div>
-                                )}
+                                    <div className="px-2 py-0.5 md:py-1 bg-white/5 rounded-sm text-[7px] md:text-[8px] font-bold text-white/40 uppercase tracking-widest">
+                                        {item.type || 'DOC'}
+                                    </div>
+                                </div>
+                                <div className="mt-auto">
+                                    <div className="text-xs md:text-sm font-bold text-white/80 group-hover:text-white transition-colors leading-tight mb-1 line-clamp-2">{item.title}</div>
+                                    <div className="text-[8px] md:text-[9px] text-[#FACC15]/60 uppercase tracking-widest font-bold mb-2">{item.category}</div>
+                                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                                        <div className="text-[8px] text-white/30 font-bold uppercase tracking-widest">{item.date || 'Asset'}</div>
+                                        <ArrowUpRight size={10} className="text-white/10 group-hover:text-[#FACC15] transition-all" />
+                                    </div>
+                                </div>
                             </motion.div>
-                        )}
-                    </AnimatePresence>
+                        ))}
+                    </div>
+                    
+                    {filteredVault.length > 8 && (
+                        <button 
+                            onClick={() => setShowAllVault(!showAllVault)}
+                            className="w-full mt-2 md:mt-4 py-2 bg-gradient-to-r from-transparent via-white/5 to-transparent hover:via-[#FACC15]/10 border-y border-transparent hover:border-[#FACC15]/20 flex items-center justify-center gap-2 text-[8px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 hover:text-[#FACC15] transition-all cursor-pointer"
+                        >
+                            {showAllVault ? <ChevronUp size={12} /> : <Grid size={12} />}
+                            {showAllVault ? 'Collapse Repository' : `Load Full Secure Repository (${filteredVault.length} Assets)`}
+                        </button>
+                    )}
                 </motion.div>
 
+
+
                 {/* ═══════════════════════════════════════════════════════
-                    MODALS
+                    FLOATING VAULT ENTRY WIDGET
                 ═══════════════════════════════════════════════════════ */}
                 <AnimatePresence>
                     {selectedVaultEntry && (
-                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8">
-                            <motion.div 
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setSelectedVaultEntry(null)}
-                                className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                            />
-                            
-                            <motion.div 
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="relative w-full max-w-2xl bg-[#121214] border border-[#FACC15]/20 rounded-3xl overflow-hidden shadow-2xl"
-                            >
-                                <div className="p-8">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-[#FACC15]/10 flex items-center justify-center">
-                                                <FileText className="text-[#FACC15]" size={24} />
+                        <motion.div 
+                            drag 
+                            dragMomentum={false}
+                            initial={{ opacity: 0, scale: 0.9, y: 50, x: 50 }}
+                            animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 50, x: 50 }}
+                            className="fixed bottom-6 right-6 z-[200] w-full max-w-sm md:max-w-md bg-[#121214]/95 backdrop-blur-xl border border-[#FACC15]/30 rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
+                            style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(250, 204, 21, 0.1)' }}
+                        >
+                            {/* Drag Handle & Header */}
+                            <div className="p-4 border-b border-[#FACC15]/20 flex items-center justify-between bg-gradient-to-r from-[#FACC15]/10 to-transparent cursor-grab active:cursor-grabbing">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-[#FACC15]/20 flex items-center justify-center">
+                                        <FileText className="text-[#FACC15]" size={16} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-white tracking-tight uppercase">
+                                            {isAddingVault ? 'New Entry' : isEditingVault ? 'Edit Entry' : selectedVaultEntry.title || 'Untitled'}
+                                        </h2>
+                                        <p className="text-[9px] font-bold text-[#FACC15]/60 uppercase tracking-widest mt-0.5">
+                                            {selectedVaultEntry.category || 'Vault Asset'} // {selectedVaultEntry.type || 'SECURE'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => { setSelectedVaultEntry(null); setIsAddingVault(false); setIsEditingVault(false); }}
+                                    className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            {/* Scrollable Content */}
+                            <div className="p-6 overflow-y-auto no-scrollbar flex-1" onPointerDownCapture={(e) => e.stopPropagation()}>
+                                {isEditingVault || isAddingVault ? (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-[10px] uppercase font-bold text-[#FACC15]/80 tracking-widest mb-1 block">Title</label>
+                                            <input type="text" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                                                className="w-full bg-black/40 border border-[#FACC15]/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FACC15]/60 transition-colors" placeholder="e.g. Supabase Admin" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[10px] uppercase font-bold text-[#FACC15]/80 tracking-widest mb-1 block">Category</label>
+                                                <input type="text" value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                                                    className="w-full bg-black/40 border border-[#FACC15]/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FACC15]/60 transition-colors" placeholder="Credentials" />
                                             </div>
                                             <div>
-                                                <h2 className="text-2xl font-bold text-white tracking-tight">
-                                                    {isEditingVault ? 'Edit Vault Entry' : selectedVaultEntry.title}
-                                                </h2>
-                                                <p className="sov-label opacity-40 mt-1">
-                                                    {selectedVaultEntry.category} // {selectedVaultEntry.type}
-                                                </p>
+                                                <label className="text-[10px] uppercase font-bold text-[#FACC15]/80 tracking-widest mb-1 block">Type/Tag</label>
+                                                <input type="text" value={editForm.type} onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                                                    className="w-full bg-black/40 border border-[#FACC15]/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FACC15]/60 transition-colors" />
                                             </div>
                                         </div>
-                                        <button 
-                                            onClick={() => setSelectedVaultEntry(null)}
-                                            className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition-colors"
-                                        >
-                                            <X size={20} />
+                                        <div>
+                                            <label className="text-[10px] uppercase font-bold text-[#FACC15]/80 tracking-widest mb-1 block">Username / Email</label>
+                                            <input type="text" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                                                className="w-full bg-black/40 border border-[#FACC15]/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FACC15]/60 transition-colors" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase font-bold text-[#FACC15]/80 tracking-widest mb-1 block">Password</label>
+                                            <input type="text" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                                                className="w-full bg-black/40 border border-[#FACC15]/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FACC15]/60 transition-colors" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[10px] uppercase font-bold text-[#FACC15]/80 tracking-widest mb-1 block">URL</label>
+                                                <input type="text" value={editForm.url} onChange={(e) => setEditForm({ ...editForm, url: e.target.value })}
+                                                    className="w-full bg-black/40 border border-[#FACC15]/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FACC15]/60 transition-colors" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] uppercase font-bold text-[#FACC15]/80 tracking-widest mb-1 block">Site Code / ID</label>
+                                                <input type="text" value={editForm.site_id} onChange={(e) => setEditForm({ ...editForm, site_id: e.target.value })}
+                                                    className="w-full bg-black/40 border border-[#FACC15]/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FACC15]/60 transition-colors" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase font-bold text-[#FACC15]/80 tracking-widest mb-1 block">Notes</label>
+                                            <textarea rows={3} value={editForm.content} onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                                                className="w-full bg-black/40 border border-[#FACC15]/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FACC15]/60 transition-colors resize-none" />
+                                        </div>
+                                    </div>
+                                ) : isDeletingVault ? (
+                                    <div className="py-8 flex flex-col items-center text-center">
+                                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+                                            <AlertTriangle className="text-red-500" size={32} />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-white mb-2">Confirm Delete</h3>
+                                        <p className="text-xs text-white/50 max-w-[250px] mb-6 leading-relaxed">
+                                            Are you sure you want to permanently remove this vault entry?
+                                        </p>
+                                        <div className="flex gap-3 w-full">
+                                            <button onClick={() => deleteVaultEntry(selectedVaultEntry.id)} className="flex-1 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30 font-bold py-3 rounded-xl transition-all uppercase tracking-widest text-[10px]">
+                                                Confirm
+                                            </button>
+                                            <button onClick={() => setIsDeletingVault(false)} className="flex-1 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 font-bold py-3 rounded-xl transition-all uppercase tracking-widest text-[10px]">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {selectedVaultEntry.username && (
+                                            <div className="group bg-black/40 border border-white/5 rounded-xl p-3 flex items-center justify-between hover:border-[#FACC15]/20 transition-all">
+                                                <div className="overflow-hidden">
+                                                    <div className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-1">Username / Email</div>
+                                                    <div className="text-sm font-medium text-white truncate">{selectedVaultEntry.username}</div>
+                                                </div>
+                                                <button onClick={() => copyToClipboard(selectedVaultEntry.username, 'Username')} className="p-2 bg-white/5 rounded-lg text-white/40 hover:text-[#FACC15] hover:bg-[#FACC15]/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0 ml-2">
+                                                    <Copy size={14} />
+                                                </button>
+                                            </div>
+                                        )}
+                                        {selectedVaultEntry.password && (
+                                            <div className="group bg-black/40 border border-white/5 rounded-xl p-3 flex items-center justify-between hover:border-[#FACC15]/20 transition-all">
+                                                <div className="overflow-hidden">
+                                                    <div className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-1">Password</div>
+                                                    <div className="text-sm font-medium text-white truncate font-mono">••••••••••••••••</div>
+                                                </div>
+                                                <button onClick={() => copyToClipboard(selectedVaultEntry.password, 'Password')} className="p-2 bg-white/5 rounded-lg text-white/40 hover:text-[#FACC15] hover:bg-[#FACC15]/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0 ml-2">
+                                                    <Copy size={14} />
+                                                </button>
+                                            </div>
+                                        )}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {selectedVaultEntry.url && (
+                                                <div className="group bg-black/40 border border-white/5 rounded-xl p-3 flex items-center justify-between hover:border-[#FACC15]/20 transition-all">
+                                                    <div className="overflow-hidden">
+                                                        <div className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-1">URL</div>
+                                                        <div className="text-xs font-medium text-[#FACC15]/80 truncate">{selectedVaultEntry.url}</div>
+                                                    </div>
+                                                    <button onClick={() => copyToClipboard(selectedVaultEntry.url, 'URL')} className="p-1.5 bg-white/5 rounded-lg text-white/40 hover:text-[#FACC15] hover:bg-[#FACC15]/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0 ml-2">
+                                                        <Copy size={12} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                            {selectedVaultEntry.site_id && (
+                                                <div className="group bg-black/40 border border-white/5 rounded-xl p-3 flex items-center justify-between hover:border-[#FACC15]/20 transition-all">
+                                                    <div className="overflow-hidden">
+                                                        <div className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-1">Site Code</div>
+                                                        <div className="text-sm font-medium text-white truncate">{selectedVaultEntry.site_id}</div>
+                                                    </div>
+                                                    <button onClick={() => copyToClipboard(selectedVaultEntry.site_id, 'Site Code')} className="p-1.5 bg-white/5 rounded-lg text-white/40 hover:text-[#FACC15] hover:bg-[#FACC15]/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0 ml-2">
+                                                        <Copy size={12} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {(selectedVaultEntry.content || selectedVaultEntry.notes) && (
+                                            <div className="bg-black/40 border border-white/5 rounded-xl p-4 mt-2">
+                                                <div className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-2 flex items-center justify-between group">
+                                                    Notes / Context
+                                                    <button onClick={() => copyToClipboard(selectedVaultEntry.content || selectedVaultEntry.notes, 'Notes')} className="text-white/20 hover:text-[#FACC15] opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Copy size={10} />
+                                                    </button>
+                                                </div>
+                                                <p className="text-white/70 text-xs leading-relaxed whitespace-pre-wrap">
+                                                    {selectedVaultEntry.content || selectedVaultEntry.notes}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer Actions */}
+                            <div className="p-4 border-t border-[#FACC15]/10 bg-black/60 backdrop-blur-md" onPointerDownCapture={(e) => e.stopPropagation()}>
+                                {isEditingVault || isAddingVault ? (
+                                    <div className="flex gap-3">
+                                        <button onClick={updateVaultEntry} className="flex-1 bg-[#FACC15] text-[#121214] hover:brightness-110 font-bold py-3 rounded-xl transition-all uppercase tracking-widest text-[10px]">
+                                            Save Entry
+                                        </button>
+                                        <button onClick={() => { setIsEditingVault(false); if(isAddingVault) setSelectedVaultEntry(null); setIsAddingVault(false); }} className="flex-1 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 font-bold py-3 rounded-xl transition-all uppercase tracking-widest text-[10px]">
+                                            Cancel
                                         </button>
                                     </div>
-
-                                    {isEditingVault ? (
-                                        <div className="space-y-6">
-                                            <div>
-                                                <label className="sov-label block mb-2 text-[#FACC15]">Title</label>
-                                                <input 
-                                                    type="text"
-                                                    value={editForm.title}
-                                                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                                                    className="w-full bg-black/40 border border-[#FACC15]/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FACC15]/40"
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="sov-label block mb-2 text-[#FACC15]">Category</label>
-                                                    <input 
-                                                        type="text"
-                                                        value={editForm.category}
-                                                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                                        className="w-full bg-black/40 border border-[#FACC15]/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FACC15]/40"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="sov-label block mb-2 text-[#FACC15]">Type</label>
-                                                    <input 
-                                                        type="text"
-                                                        value={editForm.type}
-                                                        onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
-                                                        className="w-full bg-black/40 border border-[#FACC15]/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FACC15]/40"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="sov-label block mb-2 text-[#FACC15]">Content / Notes</label>
-                                                <textarea 
-                                                    rows={4}
-                                                    value={editForm.content}
-                                                    onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
-                                                    className="w-full bg-black/40 border border-[#FACC15]/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FACC15]/40 resize-none"
-                                                />
-                                            </div>
-                                            <div className="flex gap-4 pt-4">
-                                                <button 
-                                                    onClick={updateVaultEntry}
-                                                    className="flex-1 bg-[#FACC15] text-[#121214] font-bold py-4 rounded-xl hover:brightness-110 transition-all uppercase tracking-widest text-xs"
-                                                >
-                                                    Save Changes
-                                                </button>
-                                                <button 
-                                                    onClick={() => setIsEditingVault(false)}
-                                                    className="flex-1 bg-white/5 text-white font-bold py-4 rounded-xl hover:bg-white/10 transition-all uppercase tracking-widest text-xs"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : isDeletingVault ? (
-                                        <div className="py-12 flex flex-col items-center text-center">
-                                            <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
-                                                <AlertTriangle className="text-red-500" size={40} />
-                                            </div>
-                                            <h3 className="text-xl font-bold text-white mb-2">Confirm Deletion</h3>
-                                            <p className="text-white/40 max-w-xs mb-8">
-                                                Are you sure you want to permanently remove <span className="text-white font-bold">"{selectedVaultEntry.title}"</span>? This action cannot be undone.
-                                            </p>
-                                            <div className="flex gap-4 w-full max-w-sm">
-                                                <button 
-                                                    onClick={() => deleteVaultEntry(selectedVaultEntry.id)}
-                                                    className="flex-1 bg-red-500 text-white font-bold py-4 rounded-xl hover:bg-red-600 transition-all uppercase tracking-widest text-xs"
-                                                >
-                                                    Delete Permanently
-                                                </button>
-                                                <button 
-                                                    onClick={() => setIsDeletingVault(false)}
-                                                    className="flex-1 bg-white/5 text-white font-bold py-4 rounded-xl hover:bg-white/10 transition-all uppercase tracking-widest text-xs"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-8">
-                                            <div className="bg-black/40 border border-[#FACC15]/10 p-6 rounded-2xl">
-                                                <p className="text-white/60 leading-relaxed whitespace-pre-wrap">
-                                                    {selectedVaultEntry.content || 'No additional content or notes available for this entry.'}
-                                                </p>
-                                            </div>
-
-                                            <div className="flex items-center justify-between pt-8 border-t border-white/5">
-                                                <div className="flex gap-4">
-                                                    <button 
-                                                        onClick={() => setIsEditingVault(true)}
-                                                        className="flex items-center gap-2 px-6 py-3 bg-white/5 text-white/60 hover:text-[#FACC15] hover:bg-[#FACC15]/10 rounded-xl transition-all font-bold uppercase tracking-widest text-[10px]"
-                                                    >
-                                                        <Settings size={14} />
-                                                        Edit Entry
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => setIsDeletingVault(true)}
-                                                        className="flex items-center gap-2 px-6 py-3 bg-white/5 text-white/60 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all font-bold uppercase tracking-widest text-[10px]"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                                <div className="text-[10px] text-white/20 font-bold uppercase tracking-widest">
-                                                    ID: {selectedVaultEntry.id.slice(0, 8)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        </div>
+                                ) : !isDeletingVault ? (
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setIsEditingVault(true)} className="flex-1 flex items-center justify-center gap-2 bg-[#FACC15] text-[#121214] hover:brightness-110 font-bold py-2.5 rounded-xl transition-all uppercase tracking-widest text-[10px]">
+                                            <Settings size={12} /> Edit
+                                        </button>
+                                        <button onClick={() => setIsDeletingVault(true)} className="px-4 flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 font-bold py-2.5 rounded-xl transition-all">
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                ) : null}
+                            </div>
+                        </motion.div>
                     )}
                 </AnimatePresence>
 

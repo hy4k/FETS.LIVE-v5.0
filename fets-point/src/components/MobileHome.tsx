@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   CheckCircle, ExternalLink, ShieldCheck,
   ChevronRight, Globe,
-  Users, LayoutGrid, Shield,
+  Users, LayoutGrid, Shield, ClipboardList,
   Calendar, Server, Newspaper, PackageSearch, Brain, UserCheck,
   ChevronDown, X, MapPin, Activity, CheckCircle2,
   MessageSquare, AlertCircle, ArrowUpRight, Settings2,
@@ -326,27 +326,52 @@ export function MobileHome({ setActiveTab, profile }: MobileHomeProps) {
             <div className="h-[1px] flex-1 bg-white/5" />
           </div>
 
-          <motion.button
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setActiveTab('user-management')}
-            className="w-full sov-card !rounded-2xl !p-5 flex items-center justify-between relative overflow-hidden active:border-[#FACC15]/40 transition-all"
-          >
-            <div className="flex items-center gap-4 relative z-10">
-              <div className="w-12 h-12 rounded-xl bg-[#FACC15]/10 border border-[#FACC15]/20 flex items-center justify-center">
-                <Shield size={22} className="text-[#FACC15]" />
+          <div className="space-y-3">
+            <motion.button
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setActiveTab('candidate-tracker')}
+              className="w-full sov-card !rounded-2xl !p-5 flex items-center justify-between relative overflow-hidden active:border-[#FACC15]/40 transition-all"
+            >
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                  <ClipboardList size={22} className="text-cyan-400" />
+                </div>
+                <div className="text-left">
+                  <span className="font-black text-white text-base uppercase tracking-tight block leading-none mb-1">Fets Register</span>
+                  <span className="text-[#FACC15]/40 text-[9px] font-bold uppercase tracking-[0.2em]">Candidate Details</span>
+                </div>
               </div>
-              <div className="text-left">
-                <span className="font-black text-white text-base uppercase tracking-tight block leading-none mb-1">User Management</span>
-                <span className="text-[#FACC15]/40 text-[9px] font-bold uppercase tracking-[0.2em]">Global Permissions</span>
+              <ChevronRight size={18} className="text-white/15 relative z-10" />
+              <div className="absolute right-0 top-0 p-3 opacity-[0.03] rotate-12">
+                <ClipboardList size={80} />
               </div>
-            </div>
-            <ChevronRight size={18} className="text-white/15 relative z-10" />
-            <div className="absolute right-0 top-0 p-3 opacity-[0.03] rotate-12">
-              <Shield size={80} />
-            </div>
-          </motion.button>
+            </motion.button>
+
+            <motion.button
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.06 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setActiveTab('user-management')}
+              className="w-full sov-card !rounded-2xl !p-5 flex items-center justify-between relative overflow-hidden active:border-[#FACC15]/40 transition-all"
+            >
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 rounded-xl bg-[#FACC15]/10 border border-[#FACC15]/20 flex items-center justify-center">
+                  <Shield size={22} className="text-[#FACC15]" />
+                </div>
+                <div className="text-left">
+                  <span className="font-black text-white text-base uppercase tracking-tight block leading-none mb-1">User Management</span>
+                  <span className="text-[#FACC15]/40 text-[9px] font-bold uppercase tracking-[0.2em]">Global Permissions</span>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-white/15 relative z-10" />
+              <div className="absolute right-0 top-0 p-3 opacity-[0.03] rotate-12">
+                <Shield size={80} />
+              </div>
+            </motion.button>
+          </div>
         </div>
       )}
 
@@ -498,17 +523,29 @@ export function MobileHome({ setActiveTab, profile }: MobileHomeProps) {
                 </div>
               </div>
 
-              {/* User management link */}
-              <button
-                onClick={() => { setActiveTab('user-management'); setShowManagementSheet(false); }}
-                className="w-full flex items-center justify-between p-3 rounded-xl transition-all active:bg-white/5 text-white/80 border-t border-white/10 pt-4"
-              >
-                <div className="flex items-center gap-3">
-                  <Shield size={16} className="text-[#FACC15]/60" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">User Management</span>
-                </div>
-                <ChevronRight size={14} className="text-white/15" />
-              </button>
+              {/* Admin links */}
+              <div className="border-t border-white/10 pt-4 space-y-1">
+                <button
+                  onClick={() => { setActiveTab('candidate-tracker'); setShowManagementSheet(false); }}
+                  className="w-full flex items-center justify-between p-3 rounded-xl transition-all active:bg-white/5 text-white/80"
+                >
+                  <div className="flex items-center gap-3">
+                    <ClipboardList size={16} className="text-cyan-400/60" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Fets Register</span>
+                  </div>
+                  <ChevronRight size={14} className="text-white/15" />
+                </button>
+                <button
+                  onClick={() => { setActiveTab('user-management'); setShowManagementSheet(false); }}
+                  className="w-full flex items-center justify-between p-3 rounded-xl transition-all active:bg-white/5 text-white/80"
+                >
+                  <div className="flex items-center gap-3">
+                    <Shield size={16} className="text-[#FACC15]/60" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">User Management</span>
+                  </div>
+                  <ChevronRight size={14} className="text-white/15" />
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
