@@ -89,7 +89,7 @@ export function SevenDayExamOutlook({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15 }}
-      className="sov-card mb-8 !p-0 overflow-hidden"
+      className="sov-card mb-0 !p-0 overflow-hidden"
       aria-label="Seven day exam outlook"
     >
       <div className="px-5 md:px-8 pt-6 md:pt-8 pb-4 border-b border-white/[0.06]">
@@ -144,7 +144,7 @@ export function SevenDayExamOutlook({
                 <div className="text-xs font-bold text-white/40 uppercase tracking-[0.15em] mt-1">{line2}</div>
               </div>
 
-              <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2.5">
                 {isLoading ? (
                   <p className="text-sm text-white/40 font-semibold text-center pt-8 px-1">Loading exams…</p>
                 ) : clients.length === 0 ? (
@@ -157,34 +157,34 @@ export function SevenDayExamOutlook({
                         key={client}
                         className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                       >
-                        <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-white/[0.06]">
-                          <span className="w-2 h-2 rounded-full bg-[#FACC15] shrink-0 shadow-[0_0_10px_rgba(250,204,21,0.25)]" />
-                          <span className="text-xs md:text-sm font-black uppercase tracking-wide text-[#FACC15] leading-tight">
+                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/[0.06]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FACC15] shrink-0 shadow-[0_0_8px_rgba(250,204,21,0.22)]" />
+                          <span className="text-[11px] md:text-xs font-black uppercase tracking-wide text-[#FACC15] leading-tight">
                             {client}
                           </span>
                         </div>
-                        <ul className="space-y-3">
+                        <ul className="space-y-2.5">
                           {rows.map((row) => (
                             <li
                               key={row.id ?? `${row.date}-${row.start_time}-${row.exam_name}`}
-                              className="border-t border-white/[0.05] pt-3 first:border-t-0 first:pt-0"
+                              className="border-t border-white/[0.05] pt-2.5 first:border-t-0 first:pt-0"
                             >
-                              <div className="text-sm md:text-[15px] font-bold text-white leading-snug">
+                              <div className="text-xs md:text-[13px] font-semibold text-white leading-snug">
                                 {row.exam_name || 'Exam'}
                               </div>
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs md:text-sm text-white/50 font-semibold">
+                              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-1.5 text-[10px] md:text-xs text-white/50 font-semibold">
                                 <span className="inline-flex items-center gap-1">
-                                  <Users size={14} className="text-[#FACC15]/70 shrink-0" />
+                                  <Users size={12} className="text-[#FACC15]/70 shrink-0" />
                                   {row.candidate_count ?? 0} candidates
                                 </span>
                                 <span className="inline-flex items-center gap-1">
-                                  <Clock size={14} className="text-[#FACC15]/70 shrink-0" />
+                                  <Clock size={12} className="text-[#FACC15]/70 shrink-0" />
                                   {formatTime12(row.start_time)}
                                   {row.end_time ? ` – ${formatTime12(row.end_time)}` : ''}
                                 </span>
                               </div>
                               {activeBranch === 'global' && row.branch_location && (
-                                <div className="text-[11px] font-bold uppercase tracking-widest text-[#FACC15]/45 mt-2">
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-[#FACC15]/45 mt-1.5">
                                   {formatBranchName(String(row.branch_location))}
                                 </div>
                               )}

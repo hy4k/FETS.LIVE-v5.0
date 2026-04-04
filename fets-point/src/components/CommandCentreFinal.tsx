@@ -567,10 +567,12 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                 )}
 
                 {/* ═══════════════════════════════════════════════════════
-                    CANDIDATES · RAISE A CASE
+                    CANDIDATES · RAISE A CASE · OUTLOOK · LIVE SUPPORT
+                    (section rails + vertical rhythm)
                 ═══════════════════════════════════════════════════════ */}
+                <div className="flex flex-col gap-10 md:gap-14">
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     {[
                         { label: 'Candidates', value: totalCandidates, icon: Users, color: '#BADFE7', sub: 'registered today' },
                     ].map((stat, i) => (
@@ -619,6 +621,10 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     </motion.button>
                 </motion.div>
 
+                <div className="relative shrink-0 py-0.5" aria-hidden>
+                    <div className="h-px w-full bg-gradient-to-r from-transparent via-[#FACC15]/22 to-transparent shadow-[0_0_20px_rgba(250,204,21,0.06)]" />
+                </div>
+
                 {/* ═══════════════════════════════════════════════════════
                     7-DAY EXAM OUTLOOK (syncs with centre selector)
                 ═══════════════════════════════════════════════════════ */}
@@ -630,21 +636,25 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     staffLoading={isLoadingRosterStaff}
                 />
 
-                {/* Live support — compact strip below outlook */}
+                <div className="relative shrink-0 py-0.5" aria-hidden>
+                    <div className="h-px w-full bg-gradient-to-r from-transparent via-[#FACC15]/22 to-transparent shadow-[0_0_20px_rgba(250,204,21,0.06)]" />
+                </div>
+
+                {/* Live support — glass + clay tiles */}
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.18 }}
-                    className="sov-card mb-10 !p-0 overflow-hidden"
+                    className="sov-card !p-0 overflow-hidden rounded-[24px] border border-[#FACC15]/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                     aria-label="Test centre live support portals"
                 >
-                    <div className="px-4 md:px-5 py-3 md:py-3.5 border-b border-white/[0.06] flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-sm bg-[#FACC15]/10 border border-[#FACC15]/25 flex items-center justify-center shrink-0">
+                    <div className="px-4 md:px-5 py-3 md:py-3.5 border-b border-white/[0.06] flex items-center gap-2.5 bg-black/[0.12]">
+                        <div className="w-9 h-9 rounded-xl bg-[#FACC15]/10 border border-[#FACC15]/25 flex items-center justify-center shrink-0 shadow-[3px_3px_10px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]">
                             <Headphones size={17} className="text-[#FACC15]" aria-hidden />
                         </div>
                         <h3 className="text-sm md:text-base font-black text-white uppercase tracking-[0.12em] leading-none">Live Support</h3>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-white/[0.06]">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 md:gap-3 p-3 md:p-4 bg-gradient-to-b from-black/[0.18] to-transparent">
                         {LIVE_SUPPORT_PROVIDERS.map((p) => (
                             <a
                                 key={p.name}
@@ -652,13 +662,20 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title={`${p.name} — opens in a new tab`}
-                                className="group flex flex-col items-center justify-center gap-2 bg-[var(--sov-obsidian)] hover:bg-[#FACC15]/[0.06] px-2 py-3 md:py-3.5 min-h-[88px] md:min-h-[92px] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#FACC15]/40"
+                                className="group relative flex flex-col items-center justify-center overflow-hidden rounded-2xl min-h-[92px] md:min-h-[100px] px-2 py-3
+                                    border border-white/[0.12] bg-white/[0.06] backdrop-blur-xl
+                                    shadow-[8px_10px_22px_rgba(0,0,0,0.42),-6px_-6px_16px_rgba(39,87,91,0.15),inset_0_1px_0_rgba(255,255,255,0.14)]
+                                    transition-all duration-300 ease-out
+                                    hover:-translate-y-0.5 hover:border-[#FACC15]/35 hover:bg-white/[0.1]
+                                    hover:shadow-[10px_14px_28px_rgba(0,0,0,0.48),-4px_-6px_18px_rgba(250,204,21,0.08),inset_0_1px_0_rgba(255,255,255,0.2)]
+                                    focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#FACC15]/45 active:translate-y-0"
                             >
-                                <div className="w-full max-w-[140px] h-9 md:h-10 flex items-center justify-center px-1">
+                                <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.12] via-transparent to-[#1a3a3d]/40 opacity-70 group-hover:opacity-90" aria-hidden />
+                                <div className="relative z-[1] w-full max-w-[140px] h-9 md:h-10 flex items-center justify-center px-1">
                                     <img
                                         src={p.image}
                                         alt={p.name}
-                                        className="max-h-full max-w-full w-auto h-auto object-contain object-center opacity-[0.92] group-hover:opacity-100 transition-opacity"
+                                        className="max-h-full max-w-full w-auto h-auto object-contain object-center opacity-[0.94] group-hover:opacity-100 transition-opacity duration-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
                                         loading="lazy"
                                         decoding="async"
                                     />
@@ -668,6 +685,11 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                         ))}
                     </div>
                 </motion.section>
+                </div>
+
+                <div className="relative shrink-0 py-2 md:py-3" aria-hidden>
+                    <div className="h-px w-full bg-gradient-to-r from-transparent via-[#FACC15]/22 to-transparent shadow-[0_0_20px_rgba(250,204,21,0.06)]" />
+                </div>
 
                 {/* ═══════════════════════════════════════════════════════
                     F-VAULT — Secure Document Repository
