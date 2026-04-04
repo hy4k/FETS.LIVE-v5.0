@@ -148,7 +148,8 @@ export const useSevenDayRosterStaff = () => {
     if (activeBranch === 'calicut') return !b || b === 'calicut' || b === 'both'
     if (activeBranch === 'cochin') return b === 'cochin' || b === 'both'
     if (activeBranch === 'kannur') return b === 'kannur' || b === 'both'
-    return b === activeBranch.toLowerCase()
+    // Fallback if BranchType ever gains a new value (TS narrows prior branches to exhaust BranchType)
+    return b === String(activeBranch).toLowerCase()
   }
 
   return useQuery({
