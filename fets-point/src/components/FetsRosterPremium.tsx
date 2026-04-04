@@ -14,9 +14,10 @@ import { EnhancedRequestsModal } from './EnhancedRequestsModal'
 import { RosterListView } from './RosterListView'
 import { EnhancedAnalysisView } from './EnhancedAnalysisView'
 import { MobileRosterView } from './MobileRosterView'
-import { BranchSwitcher } from './BranchSwitcher'
+import { LocationSelectorThread } from './LocationSelectorThread'
 import { useAuth } from '../hooks/useAuth'
 import { useBranch } from '../hooks/useBranch'
+import { canSwitchBranches, getAvailableBranches } from '../utils/authUtils'
 import { supabase } from '../lib/supabase'
 import { formatDateForIST, getCurrentISTDateString } from '../utils/dateUtils'
 import { LeaveRequest, Schedule, StaffProfile, SHIFT_CODES, ShiftCode } from '../types/shared'
@@ -594,7 +595,9 @@ function AttendanceView({
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function FetsRosterPremium() {
   const { user, profile } = useAuth()
-  const { activeBranch } = useBranch()
+  const { activeBranch, setActiveBranch } = useBranch()
+  const canSwitchCentre = canSwitchBranches(profile?.email, profile?.role)
+  const centreOptions = getAvailableBranches(profile?.email, profile?.role)
   const isMobile = useIsMobile()
 
   // Core state
@@ -860,6 +863,14 @@ export function FetsRosterPremium() {
   // ── Mobile ───────────────────────────────────────────────────────────────
   if (isMobile) return (
     <div className={`min-h-screen bg-[#0A0A0B] pt-8 pb-32 px-4`}>
+      <div className="flex justify-center w-full -mt-2 mb-2">
+        <LocationSelectorThread
+          activeBranch={activeBranch}
+          setActiveBranch={setActiveBranch as (b: string) => void}
+          availableBranches={centreOptions}
+          canSwitch={canSwitchCentre}
+        />
+      </div>
       {notification && (
         <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl bg-[#121214] border ${
           notification.type === 'success' ? 'border-emerald-500/50 text-emerald-400' :
@@ -906,19 +917,34 @@ export function FetsRosterPremium() {
       style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
       <div className="max-w-[1800px] mx-auto">
 
-        {/* ── HEADER (Modified to remove FETS ROSTER text, keeping only user details and branch switcher) ── */}
+        {/* ── HEADER (same centre selector placement as FETS LIVE) ── */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center gap-6 mb-8 mt-4 relative z-50"
+          className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 mb-8 mt-4 relative z-50"
         >
-          {/* Location Selector (BranchSwitcher) */}
-          <div className="flex justify-center w-full">
-            <BranchSwitcher />
+          <div className="relative min-w-0">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="h-[1px] w-12 bg-[#FACC15]" />
+              <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#FACC15]">
+                Roster {activeBranch !== 'global' && `// ${activeBranch.toUpperCase()}`}
+              </span>
+            </div>
+            <div className="text-4xl md:text-6xl font-black text-[#FACC15] tracking-tighter leading-none">
+              SCHEDULE
+            </div>
           </div>
 
-          {/* User Details Section */}
-          <div className="flex items-center justify-center gap-4 flex-wrap">
+          <div className="flex w-full justify-center lg:w-auto lg:flex-1 relative lg:-mt-8 -my-2 lg:my-0">
+            <LocationSelectorThread
+              activeBranch={activeBranch}
+              setActiveBranch={setActiveBranch as (b: string) => void}
+              availableBranches={centreOptions}
+              canSwitch={canSwitchCentre}
+            />
+          </div>
+
+          <div className="flex items-center gap-4 flex-wrap justify-end w-full lg:w-auto">
             <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-white/60 rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg">
               <Users size={14} className="text-[#f6c810]" />
               <span>{staffProfiles.length} staff members</span>

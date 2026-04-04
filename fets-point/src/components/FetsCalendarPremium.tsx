@@ -18,6 +18,8 @@ import { validateSessionCapacity } from '../utils/sessionUtils'
 import { useCalendarSessions, useSessionMutations } from '../hooks/useCalendarSessions'
 import { useClients, useClientExams } from '../hooks/useClients'
 import { toast } from 'react-hot-toast'
+import { LocationSelectorThread } from './LocationSelectorThread'
+import { canSwitchBranches, getAvailableBranches } from '../utils/authUtils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Session {
@@ -131,8 +133,10 @@ const timeToMinutes = (time: string): number => {
 export function FetsCalendarPremium() {
   const { user, hasPermission, profile } = useAuth()
   const canEdit = hasPermission('calendar_edit')
-  const { activeBranch } = useBranch()
+  const { activeBranch, setActiveBranch } = useBranch()
   const { applyFilter, isGlobalView } = useBranchFilter()
+  const canSwitchCentre = canSwitchBranches(profile?.email, profile?.role)
+  const centreOptions = getAvailableBranches(profile?.email, profile?.role)
 
   // Date/View state
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -140,7 +144,6 @@ export function FetsCalendarPremium() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   // Filter/search state
-  const [locationFilter, setLocationFilter] = useState(activeBranch || 'all')
   const [searchQuery, setSearchQuery] = useState('')
   const [examTypeFilter, setExamTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -157,11 +160,8 @@ export function FetsCalendarPremium() {
     candidate_count: 1, start_time: '09:00', end_time: '17:00', status: 'scheduled'
   })
 
-  useEffect(() => { setLocationFilter(activeBranch || 'all') }, [activeBranch])
-
-  const sessionBranch = locationFilter === 'all' ? 'global' : locationFilter
   const { data: sessions = [], isLoading: loading, isError, error } = useCalendarSessions(
-    currentDate, sessionBranch as any, applyFilter, isGlobalView
+    currentDate, activeBranch, applyFilter, isGlobalView
   )
   const { data: dbClients = [] } = useClients()
   const { data: dbExams = [] } = useClientExams()
@@ -639,8 +639,8 @@ export function FetsCalendarPremium() {
     <div className="min-h-screen sovereign-theme" style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-6">
 
-        {/* ── HEADER ── */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12 mt-8">
+        {/* ── HEADER (aligned with FETS LIVE: title | centre selector | stats) ── */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-8 mt-24">
           <div className="relative">
             <div className="flex items-center gap-4 mb-3">
               <div className="h-[1px] w-12 bg-[#FACC15]" />
@@ -655,7 +655,17 @@ export function FetsCalendarPremium() {
               {getHeaderTitle()}
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
+
+          <div className="flex w-full justify-center lg:w-auto lg:flex-1 relative lg:-mt-12 -my-4 lg:my-0 z-50">
+            <LocationSelectorThread
+              activeBranch={activeBranch}
+              setActiveBranch={setActiveBranch as (b: string) => void}
+              availableBranches={centreOptions}
+              canSwitch={canSwitchCentre}
+            />
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap justify-end w-full lg:w-auto">
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0A0A0B] border border-[rgba(255, 255, 255, 0.1)] text-[#f6c810] rounded-lg text-xs font-bold">
               <Users size={12} />{stats.total} candidates
             </div>
@@ -702,19 +712,6 @@ export function FetsCalendarPremium() {
               className="px-4 py-2.5 text-sm font-bold text-slate-300 bg-[#0A0A0B] border border-[rgba(255, 255, 255, 0.1)] rounded-lg hover:border-[#f6c810]/50 hover:text-[#f6c810] transition-colors">
               Today
             </button>
-
-            {/* Location filter */}
-            <div className="flex items-center px-3 py-2 bg-[#0A0A0B] border border-[rgba(255, 255, 255, 0.1)] rounded-lg">
-              <MapPin size={13} className="text-[#f6c810] mr-2" />
-              <select value={locationFilter} onChange={e => setLocationFilter(e.target.value)}
-                className="bg-transparent border-none outline-none text-xs font-bold text-slate-300 cursor-pointer">
-                <option value="all">All Locations</option>
-                <option value="calicut">Calicut</option>
-                <option value="cochin">Cochin</option>
-                <option value="kannur">Kannur</option>
-                <option value="global">Global</option>
-              </select>
-            </div>
           </div>
 
           <div className="flex items-center gap-2">

@@ -24,7 +24,6 @@ export function BranchSwitcher() {
     }
   }, [isOpen])
 
-  // Only show for super admins - check AFTER all hooks
   if (!canSwitchBranches(profile?.email, profile?.role)) {
     return null
   }
@@ -41,7 +40,7 @@ export function BranchSwitcher() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="group flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0b] hover:from-[#2a2a2a] hover:to-[#121214] transition-all duration-300 shadow-[0_0_20px_rgba(246,200,16,0.1)] hover:shadow-[0_0_25px_rgba(246,200,16,0.2)] border border-[#f6c810]/30"
-        title="Switch Branch (Super Admin)"
+        title="Change centre / location"
       >
         <MapPin className="h-5 w-5 text-[#f6c810] drop-shadow-[0_0_8px_rgba(246,200,16,0.5)]" />
         <span className="text-sm font-black text-[#f6c810] tracking-[0.2em] uppercase drop-shadow-[0_0_8px_rgba(246,200,16,0.5)]">

@@ -1,16 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
-import { Mail, Lock, ChevronDown, ArrowRight, Sparkles } from 'lucide-react'
-import { getAvailableBranches, formatBranchName } from '../utils/authUtils'
+import { Mail, Lock, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-type Stage = 'splash' | 'credentials' | 'branch' | 'launching'
+type Stage = 'credentials' | 'launching'
 
 export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [selectedBranch, setSelectedBranch] = useState<string>('calicut')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const { signIn } = useAuth()
@@ -20,20 +18,9 @@ export function Login() {
   const [showForgot, setShowForgot] = useState(false)
   const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-  const availableBranches = getAvailableBranches(email, null)
-
-
-
-  // After credentials entered, move to branch selection
-  const handleCredentialsNext = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) return
-    setError('')
-    setStage('branch')
-  }
-
-  // Final sign in
-  const handleSignIn = async () => {
     setLoading(true)
     setError('')
     setStage('launching')
@@ -43,15 +30,10 @@ export function Login() {
       if (error) {
         setError(error.message)
         setStage('credentials')
-      } else {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          localStorage.setItem('fets_active_branch', selectedBranch)
-        }
       }
     } catch (err: any) {
-      const errorMessage = err.message === 'Failed to fetch' 
-        ? 'Network error: Unable to connect to the server. Please check your internet connection or disable adblockers.' 
+      const errorMessage = err.message === 'Failed to fetch'
+        ? 'Network error: Unable to connect to the server. Please check your internet connection or disable adblockers.'
         : (err.message || 'Login failed')
       setError(errorMessage)
       setStage('credentials')
@@ -72,8 +54,8 @@ export function Login() {
       if (error) throw error
       setResetMessage({ type: 'success', text: 'Recovery link sent! Check your inbox.' })
     } catch (err: any) {
-      const errorMessage = err.message === 'Failed to fetch' 
-        ? 'Network error: Unable to connect to the server. Please check your internet connection or disable adblockers.' 
+      const errorMessage = err.message === 'Failed to fetch'
+        ? 'Network error: Unable to connect to the server. Please check your internet connection or disable adblockers.'
         : (err.message || 'Something went wrong')
       setResetMessage({ type: 'error', text: errorMessage })
     } finally {
@@ -81,7 +63,6 @@ export function Login() {
     }
   }
 
-  // Shared page transition config
   const pageTransition = {
     initial: { opacity: 0, y: 40, filter: 'blur(8px)' },
     animate: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
@@ -91,21 +72,15 @@ export function Login() {
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
 
-      {/* ══ ANIMATED BACKGROUND ══ */}
       <motion.div
         className="absolute inset-0 z-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.5 }}
       >
-        {/* Rich layered yellow gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#F7D046] via-[#F0C027] to-[#E2A80D]" />
-
-        {/* Subtle warm overlay for depth */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(180,120,0,0.15)_0%,transparent_50%)]" />
-
-        {/* Floating ambient shapes */}
         <motion.div
           animate={{ y: [-30, 30, -30], x: [-15, 15, -15], rotate: [0, 10, 0] }}
           transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
@@ -121,23 +96,17 @@ export function Login() {
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
           className="absolute top-[50%] right-[50%] w-[180px] h-[180px] rounded-full bg-orange-400/[0.08] blur-3xl"
         />
-
-        {/* Subtle grid texture */}
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.3) 1px, transparent 1px)',
           backgroundSize: '32px 32px'
         }} />
       </motion.div>
 
-      {/* ══ MAIN CONTENT AREA ══ */}
       <div className="relative z-10 w-full max-w-[420px] px-8">
         <AnimatePresence mode="wait">
 
-
-          {/* ────────── STAGE 2: CREDENTIALS ────────── */}
           {stage === 'credentials' && !showForgot && (
             <motion.div key="credentials" {...pageTransition} className="py-10">
-              {/* Subtle branding at top */}
               <motion.div
                 className="text-center mb-10"
                 initial={{ opacity: 0, y: -10 }}
@@ -153,7 +122,7 @@ export function Login() {
                 <p className="text-white/40 text-[11px] font-bold uppercase tracking-[0.3em]">Sign in to your workspace</p>
               </motion.div>
 
-              <form onSubmit={handleCredentialsNext} className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-4">
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -164,7 +133,6 @@ export function Login() {
                   </motion.div>
                 )}
 
-                {/* Email */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -185,7 +153,6 @@ export function Login() {
                   </div>
                 </motion.div>
 
-                {/* Password */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -214,22 +181,27 @@ export function Login() {
                   </div>
                 </motion.div>
 
-                {/* Continue button */}
                 <motion.button
                   type="submit"
+                  disabled={loading}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
-                  className="w-full mt-6 py-4 bg-white text-[#B8860B] font-extrabold text-sm rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] hover:shadow-[0_15px_50px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2"
+                  className="w-full mt-6 py-4 bg-white text-[#B8860B] font-extrabold text-sm rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] hover:shadow-[0_15px_50px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60"
                 >
-                  Continue
-                  <ArrowRight size={16} className="opacity-70" />
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-amber-300 border-t-amber-700 rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      Sign In
+                      <ArrowRight size={16} className="opacity-70" />
+                    </>
+                  )}
                 </motion.button>
               </form>
             </motion.div>
           )}
 
-          {/* ────────── FORGOT PASSWORD ────────── */}
           {stage === 'credentials' && showForgot && (
             <motion.div key="forgot" {...pageTransition} className="py-10">
               <motion.div className="text-center mb-10">
@@ -280,55 +252,6 @@ export function Login() {
             </motion.div>
           )}
 
-          {/* ────────── STAGE 3: BRANCH SELECTION ────────── */}
-          {stage === 'branch' && (
-            <motion.div key="branch" {...pageTransition} className="py-10">
-              {/* Branch dropdown */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mb-6"
-              >
-                <label className="block text-white/50 text-[10px] font-bold uppercase tracking-[0.2em] mb-2 ml-1">Select Centre</label>
-                <div className="relative">
-                  <select
-                    value={selectedBranch}
-                    onChange={(e) => setSelectedBranch(e.target.value)}
-                    className="w-full px-5 py-4 bg-white/15 backdrop-blur-xl border border-white/20 rounded-2xl text-white text-sm font-bold focus:outline-none focus:bg-white/20 focus:border-white/40 transition-all appearance-none cursor-pointer"
-                  >
-                    {availableBranches.map((branch) => (
-                      <option key={branch} value={branch} className="text-slate-800 bg-white">
-                        {formatBranchName(branch)}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 pointer-events-none" />
-                </div>
-              </motion.div>
-
-              {/* Sign In button */}
-              <motion.button
-                onClick={handleSignIn}
-                disabled={loading}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 }}
-                className="w-full py-4 bg-white text-[#B8860B] font-extrabold text-sm rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] hover:shadow-[0_15px_50px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-amber-300 border-t-amber-700 rounded-full animate-spin" />
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRight size={16} className="opacity-70" />
-                  </>
-                )}
-              </motion.button>
-            </motion.div>
-          )}
-
-          {/* ────────── STAGE 4: LAUNCHING ────────── */}
           {stage === 'launching' && (
             <motion.div
               key="launching"
@@ -367,7 +290,6 @@ export function Login() {
         </AnimatePresence>
       </div>
 
-      {/* ── BOTTOM COPYRIGHT ── */}
       <motion.div
         className="absolute bottom-5 left-0 right-0 text-center z-10"
         initial={{ opacity: 0 }}
@@ -382,7 +304,6 @@ export function Login() {
         </a>
       </motion.div>
 
-      {/* Font import */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
       `}</style>

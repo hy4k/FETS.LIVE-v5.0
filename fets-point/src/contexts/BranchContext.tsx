@@ -7,7 +7,6 @@ import { supabase } from '../lib/supabase';
 
 import { BranchContext, BranchType, ViewMode } from './BranchContextValue';
 
-import { canSwitchBranches } from '../utils/authUtils';
 
 // Re-export types for convenience
 export type { BranchType, ViewMode };
@@ -21,6 +20,12 @@ interface BranchProviderProps {
 }
 
 
+
+const VALID_BRANCHES: BranchType[] = ['calicut', 'cochin', 'kannur', 'global'];
+
+function branchStorageKey(authUserId: string) {
+  return `fets_active_branch__${authUserId}`;
+}
 
 export function BranchProvider({ children }: BranchProviderProps) {
 
@@ -116,19 +121,8 @@ export function BranchProvider({ children }: BranchProviderProps) {
 
   const setActiveBranch = useCallback(async (branch: BranchType) => {
 
-    // Only super admins can switch branches after login
-
-    if (!canSwitchBranches(profile?.email, profile?.role)) {
-
-      console.warn('⚠️ Branch switching is only available to super admins');
-
-      return;
-
-    }
-
-
-
     if (!canAccessBranch(branch) || branch === activeBranch) return;
+    if (!user?.id) return;
 
 
     // Add switching animation class
@@ -139,8 +133,9 @@ export function BranchProvider({ children }: BranchProviderProps) {
 
 
     try {
-      // Update state and persistence
+      // Update state and persistence (per auth user + legacy mirror for pre-auth reads)
       setActiveBranchState(branch);
+      localStorage.setItem(branchStorageKey(user.id), branch);
       localStorage.setItem('fets_active_branch', branch);
     } finally {
 
@@ -151,27 +146,33 @@ export function BranchProvider({ children }: BranchProviderProps) {
 
     }
 
-  }, [canAccessBranch, activeBranch, profile?.email, profile?.role]);
+  }, [canAccessBranch, activeBranch, user?.id]);
 
 
 
-  // Load initial branch from user's profile (set at login)
+  // When the signed-in user changes: restore their saved centre, or fall back to profile default.
+  // Do not re-run when activeBranch changes — that was resetting non–super-admin picks immediately after they switched.
   useEffect(() => {
-    if (profile) {
-      const defaultBranch = profile.branch_assigned === 'both' ? 'calicut' : profile.branch_assigned;
+    if (!user?.id || !profile) return;
 
-      // If no manually saved branch, or (if not super admin) current active branch is not in user's access list, set to default
-      const savedBranch = localStorage.getItem('fets_active_branch');
-      const isSuper = profile.role === 'super_admin';
+    const key = branchStorageKey(user.id);
+    const saved = localStorage.getItem(key) as BranchType | null;
+    const defaultBranch = (
+      profile.branch_assigned === 'both' ? 'calicut' : profile.branch_assigned || 'calicut'
+    ) as BranchType;
 
-      if (!savedBranch || (!isSuper && profile.branch_assigned !== 'both' && profile.branch_assigned !== 'global' && savedBranch !== profile.branch_assigned)) {
-        setActiveBranchState(defaultBranch as BranchType);
-        localStorage.setItem('fets_active_branch', defaultBranch);
-      }
+    const savedOk = saved && VALID_BRANCHES.includes(saved);
 
-      console.log(`🏢 Synchronized branch from profile: ${activeBranch}`);
+    if (!savedOk) {
+      setActiveBranchState(defaultBranch);
+      localStorage.setItem(key, defaultBranch);
+      localStorage.setItem('fets_active_branch', defaultBranch);
+      return;
     }
-  }, [profile, activeBranch]);
+
+    setActiveBranchState(saved);
+    localStorage.setItem('fets_active_branch', saved);
+  }, [user?.id, profile?.user_id]);
 
 
 
