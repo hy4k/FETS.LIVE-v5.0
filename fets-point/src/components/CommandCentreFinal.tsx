@@ -24,6 +24,7 @@ import { FetsChatPopup } from './FetsChatPopup'
 import { canSwitchBranches, formatBranchName, getAvailableBranches } from '../utils/authUtils'
 import { useAppModules } from '../hooks/useAppModules'
 import { LocationSelectorThread } from './LocationSelectorThread'
+import { SevenDayExamOutlook } from './SevenDayExamOutlook'
 import { format } from 'date-fns'
 
 // Exam type color map
@@ -364,7 +365,7 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
     const totalSessions = filteredTodaysExams.length
     const healthColor = opsMetrics.healthScore >= 80 ? '#10b981' : opsMetrics.healthScore >= 50 ? '#f59e0b' : '#ef4444'
 
-    if (isLoadingStats || isLoadingSchedule) {
+    if (isLoadingStats) {
         return (
             <div className="flex items-center justify-center h-screen sovereign-theme">
                 <div className="flex flex-col items-center gap-6">
@@ -703,6 +704,15 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                 </motion.div>
 
                 {/* ═══════════════════════════════════════════════════════
+                    7-DAY EXAM OUTLOOK (syncs with centre selector)
+                ═══════════════════════════════════════════════════════ */}
+                <SevenDayExamOutlook
+                    sessions={examSchedule as any}
+                    isLoading={isLoadingSchedule}
+                    activeBranch={activeBranch}
+                />
+
+                {/* ═══════════════════════════════════════════════════════
                     F-VAULT — Secure Document Repository
                 ═══════════════════════════════════════════════════════ */}
                 <motion.div
@@ -711,37 +721,59 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     transition={{ delay: 0.2 }}
                     className="mb-12"
                 >
-                    <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-4 group">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-sm bg-[#FACC15]/10 flex items-center justify-center border border-[#FACC15]/20">
+                    <button
+                        type="button"
+                        onClick={() => setIsVaultCollapsed((v) => !v)}
+                        className="w-full flex items-center justify-between gap-4 border-b border-white/5 pb-4 group text-left rounded-sm hover:bg-white/[0.02] transition-colors -mx-1 px-1"
+                    >
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-sm bg-[#FACC15]/10 flex items-center justify-center border border-[#FACC15]/20 shrink-0">
                                 <ShieldCheck size={16} className="text-[#FACC15]" />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <h3 className="text-xl font-black text-white tracking-tighter uppercase group-hover:text-[#FACC15] transition-colors leading-none">F-Vault</h3>
-                                <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mt-1.5 hidden md:block">Secure Document Repository ({vaultEntries.length})</p>
+                                <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mt-1.5 truncate">
+                                    {isVaultCollapsed ? 'Secure document repository — tap to expand' : `Secure Document Repository (${vaultEntries.length})`}
+                                </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="relative hidden md:block group/search mr-2">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-focus-within/search:text-[#FACC15] transition-colors" />
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    value={vaultSearch}
-                                    onChange={(e) => setVaultSearch(e.target.value)}
-                                    className="bg-black/40 border border-white/5 rounded-sm pl-8 pr-3 py-1.5 text-[10px] uppercase font-bold text-white focus:outline-none focus:border-[#FACC15]/40 w-48 transition-all"
-                                />
-                            </div>
-                            <button 
-                                onClick={openAddVault}
-                                className="px-4 py-2 flex items-center gap-1.5 bg-[#FACC15]/10 text-[#FACC15] border border-[#FACC15]/20 hover:bg-[#FACC15]/20 hover:border-[#FACC15]/60 rounded-sm text-[9px] uppercase font-bold tracking-widest transition-all"
-                            >
-                                <Plus size={12} /> Add Asset
-                            </button>
-                        </div>
-                    </div>
+                        <ChevronDown
+                            size={20}
+                            className={`shrink-0 text-[#FACC15]/60 transition-transform duration-300 ${isVaultCollapsed ? '' : 'rotate-180'}`}
+                            aria-hidden
+                        />
+                    </button>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    <AnimatePresence initial={false}>
+                        {!isVaultCollapsed && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="overflow-hidden"
+                            >
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 pb-4 border-b border-white/5">
+                                    <div className="relative group/search w-full sm:w-auto">
+                                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-focus-within/search:text-[#FACC15] transition-colors" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search..."
+                                            value={vaultSearch}
+                                            onChange={(e) => setVaultSearch(e.target.value)}
+                                            className="bg-black/40 border border-white/5 rounded-sm pl-8 pr-3 py-1.5 text-[10px] uppercase font-bold text-white focus:outline-none focus:border-[#FACC15]/40 w-full sm:w-48 transition-all"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={openAddVault}
+                                        className="px-4 py-2 flex items-center justify-center gap-1.5 bg-[#FACC15]/10 text-[#FACC15] border border-[#FACC15]/20 hover:bg-[#FACC15]/20 hover:border-[#FACC15]/60 rounded-sm text-[9px] uppercase font-bold tracking-widest transition-all shrink-0"
+                                    >
+                                        <Plus size={12} /> Add Asset
+                                    </button>
+                                </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-2">
                         {(showAllVault ? filteredVault : filteredVault.slice(0, 8)).map((item: any, i: number) => (
                             <motion.div key={item.id || i}
                                 onClick={() => openVaultDetails(item)}
@@ -769,6 +801,7 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     
                     {filteredVault.length > 8 && (
                         <button 
+                            type="button"
                             onClick={() => setShowAllVault(!showAllVault)}
                             className="w-full mt-2 md:mt-4 py-2 bg-gradient-to-r from-transparent via-white/5 to-transparent hover:via-[#FACC15]/10 border-y border-transparent hover:border-[#FACC15]/20 flex items-center justify-center gap-2 text-[8px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 hover:text-[#FACC15] transition-all cursor-pointer"
                         >
@@ -776,6 +809,9 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                             {showAllVault ? 'Collapse Repository' : `Load Full Secure Repository (${filteredVault.length} Assets)`}
                         </button>
                     )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
 
 

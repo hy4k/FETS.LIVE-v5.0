@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useBranch } from './useBranch'
+import { formatDateForIST, getCurrentISTDateString, createISTDate } from '../utils/dateUtils'
 
 const STALE_TIME = 60000 // 1 minute
 
@@ -90,29 +91,42 @@ export const useCandidateTrend = () => {
   })
 }
 
-// Hook for upcoming schedule
+// Next 7 calendar days (including today) in IST — rolls forward when the date changes
 export const useUpcomingSchedule = () => {
   const { activeBranch } = useBranch()
 
   return useQuery({
     queryKey: ['upcomingSchedule', activeBranch],
     queryFn: async () => {
-      const today = new Date()
-      const sevenDaysLater = new Date(today)
-      sevenDaysLater.setDate(today.getDate() + 7)
+      const startStr = getCurrentISTDateString()
+      const start = createISTDate(startStr)
+      const end = new Date(start)
+      end.setDate(end.getDate() + 6)
+      const endStr = formatDateForIST(end)
 
-      const query = supabase
+      let query = supabase
         .from('calendar_sessions')
         .select('*')
-        .gte('date', today.toISOString().split('T')[0])
-        .lte('date', sevenDaysLater.toISOString().split('T')[0])
-        .order('date')
+        .gte('date', startStr)
+        .lte('date', endStr)
+        .order('date', { ascending: true })
+        .order('start_time', { ascending: true })
 
-      const { data, error } = await applyBranchFilter(query, activeBranch)
+      if (activeBranch === 'global') {
+        // all centres
+      } else if (activeBranch === 'calicut') {
+        query = query.or('branch_location.eq.calicut,branch_location.is.null')
+      } else {
+        query = query.eq('branch_location', activeBranch)
+      }
+
+      const { data, error } = await query
       if (error) throw error
-      return data || []
+      return (data || []) as Record<string, unknown>[]
     },
     staleTime: STALE_TIME,
+    refetchInterval: STALE_TIME,
+    refetchOnWindowFocus: true,
   })
 }
 
