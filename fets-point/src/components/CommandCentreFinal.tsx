@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     Users, Activity, CheckCircle, Sparkles,
     Settings, ChevronRight, ChevronDown, Bell, AlertTriangle, Shield, ClipboardList,
-    CheckCircle2, AlertCircle, Star, MessageSquare, Search, X,
+    AlertCircle, Star, MessageSquare, Search, X,
     ExternalLink, Globe, TrendingUp, Calendar, MapPin,
     Building2, Clock, Zap, Lock, Unlock, Key, Copy,
     Eye, EyeOff, Plus, Trash2, Crown, Database, Briefcase,
@@ -14,7 +14,7 @@ import {
 import { useAuth } from '../hooks/useAuth'
 import { useBranch } from '../hooks/useBranch'
 import { toast } from 'react-hot-toast'
-import { useDashboardStats, useUpcomingSchedule } from '../hooks/useCommandCentre'
+import { useDashboardStats, useUpcomingSchedule, useSevenDayStaffAttendance } from '../hooks/useCommandCentre'
 import { useNews } from '../hooks/useNewsManager'
 import { AccessHub } from './AccessHub'
 import { MobileHome } from './MobileHome'
@@ -86,10 +86,10 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
 
     const { data: dashboardData, isLoading: isLoadingStats } = useDashboardStats()
     const { data: examSchedule = [], isLoading: isLoadingSchedule } = useUpcomingSchedule()
+    const { data: staffByDate = {}, isLoading: isLoadingStaffAttendance } = useSevenDayStaffAttendance()
     const { data: newsItems = [] } = useNews()
 
     const [opsMetrics, setOpsMetrics] = useState({ healthScore: 100, critical: 0, open: 0, topIssue: 'Stable' })
-    const [staffPresent, setStaffPresent] = useState<Array<{ name: string; branch: string; check_in?: string }>>([])
     const [loadingAnalysis, setLoadingAnalysis] = useState(true)
     const [activeCenter, setActiveCenter] = useState<string>('all')
     const [portals, setPortals] = useState<any[]>([])
@@ -147,27 +147,6 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
             events?.forEach((e: any) => { categories[e.category || 'Other'] = (categories[e.category || 'Other'] || 0) + 1 })
             const topCat = Object.entries(categories).sort((a, b) => b[1] - a[1])[0]
             setOpsMetrics({ healthScore: health, critical, open: openEvents.length, topIssue: topCat ? topCat[0] : 'Stable' })
-
-            // Staff attendance today
-            const today = new Date().toISOString().split('T')[0]
-            const { data: attendance } = await (supabase as any)
-                .from('staff_attendance')
-                .select('staff_id, check_in, branch_location, staff_profiles(full_name)')
-                .eq('date', today)
-                .not('check_in', 'is', null)
-            if (attendance) {
-                setStaffPresent(attendance
-                    .filter((a: any) => {
-                        const loc = (a.branch_location || 'calicut').toLowerCase()
-                        return activeBranch === 'global' || loc === activeBranch.toLowerCase()
-                    })
-                    .map((a: any) => ({
-                        name: a.staff_profiles?.full_name || 'Staff',
-                        branch: a.branch_location || activeBranch,
-                        check_in: a.check_in
-                    }))
-                )
-            }
         } catch (e) {
             console.error('Analysis load failed', e)
         } finally {
@@ -478,20 +457,6 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                                                     <span className="text-[8px] font-bold text-[#FACC15] uppercase tracking-[0.3em]">System Controls</span>
                                                 </div>
                                                 <div className="p-1.5 space-y-1">
-                                                    {/* Raise A Case */}
-                                                    <button
-                                                        onClick={() => { onNavigate?.('incident-log'); setShowManagementMenu(false); }}
-                                                        className="w-full flex items-center justify-between p-2 rounded-sm transition-all hover:bg-white/5 text-white/80"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <AlertCircle size={12} className="text-white/40" />
-                                                            <span className="text-[9px] font-bold uppercase tracking-wider">Raise A Case</span>
-                                                        </div>
-                                                        <ChevronRight size={10} className="opacity-20" />
-                                                    </button>
-
-                                                    <div className="h-px bg-white/5 my-1.5" />
-
                                                     {/* Second Row Items */}
                                                     {secondRowItems.map((item) => (
                                                         <button
@@ -650,9 +615,8 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     {[
                         { label: 'Sessions Today', value: totalSessions, icon: Calendar, color: '#FACC15', sub: `${activeBranch !== 'global' ? activeBranch : 'all centres'}` },
                         { label: 'Candidates', value: totalCandidates, icon: Users, color: '#BADFE7', sub: 'registered today' },
-                        { label: 'Staff Present', value: staffPresent.length, icon: CheckCircle2, color: '#C2EDCE', sub: 'checked in' },
                     ].map((stat, i) => (
-                        <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.1 }}
+                        <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.1 }}
                             className="sov-card group relative overflow-hidden h-[160px] flex flex-col justify-between">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#FACC15]/5 to-transparent blur-3xl -mr-16 -mt-16 group-hover:from-[#FACC15]/10 transition-all duration-500" />
                             
@@ -670,6 +634,31 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                             </div>
                         </motion.div>
                     ))}
+
+                    {/* Raise a Case — opens incident workspace (same route as former MGMT menu) */}
+                    <motion.button
+                        type="button"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.25 }}
+                        onClick={() => onNavigate?.('incident-log')}
+                        className="sov-card group relative overflow-hidden h-[160px] flex flex-col justify-between text-left cursor-pointer border-rose-500/10 hover:border-[#FACC15]/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FACC15]/50"
+                    >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-rose-500/10 to-transparent blur-3xl -mr-16 -mt-16 group-hover:from-[#FACC15]/10 transition-all duration-500" />
+                        <div className="relative z-10 flex items-start justify-between">
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-sm bg-rose-500/10 border border-rose-500/25 flex items-center justify-center group-hover:border-[#FACC15]/40 transition-all duration-500">
+                                <AlertCircle size={18} className="text-rose-400/90 group-hover:text-[#FACC15] transition-colors" />
+                            </div>
+                            <ArrowUpRight size={14} className="text-white/10 group-hover:text-[#FACC15] transition-all" />
+                        </div>
+                        <div className="relative z-10 mt-auto">
+                            <div className="text-3xl md:text-4xl font-bold tracking-tighter text-white mb-1 group-hover:text-[#FACC15] transition-colors leading-none">
+                                {dashboardData?.openEvents ?? 0}
+                            </div>
+                            <div className="text-[10px] md:text-sm font-black text-white/60 tracking-wider uppercase group-hover:opacity-100 transition-opacity leading-none mt-2">Raise a Case</div>
+                            <div className="text-[8px] md:text-[9px] text-white/20 mt-1.5 uppercase tracking-widest font-bold leading-none">open incidents · tap to report</div>
+                        </div>
+                    </motion.button>
 
                     {/* Quick Launch (4th Box) */}
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
@@ -710,6 +699,8 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     sessions={examSchedule as any}
                     isLoading={isLoadingSchedule}
                     activeBranch={activeBranch}
+                    staffByDate={staffByDate}
+                    staffLoading={isLoadingStaffAttendance}
                 />
 
                 {/* ═══════════════════════════════════════════════════════

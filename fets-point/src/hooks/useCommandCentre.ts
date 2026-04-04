@@ -130,6 +130,63 @@ export const useUpcomingSchedule = () => {
   })
 }
 
+/** Checked-in staff per calendar date (IST), for the 7-day outlook — synced with active branch */
+export const useSevenDayStaffAttendance = () => {
+  const { activeBranch } = useBranch()
+
+  return useQuery({
+    queryKey: ['sevenDayStaffAttendance', activeBranch],
+    queryFn: async () => {
+      const startStr = getCurrentISTDateString()
+      const start = createISTDate(startStr)
+      const end = new Date(start)
+      end.setDate(end.getDate() + 6)
+      const endStr = formatDateForIST(end)
+
+      const { data, error } = await supabase
+        .from('staff_attendance')
+        .select('date, branch_location, check_in, staff_profiles(full_name)')
+        .gte('date', startStr)
+        .lte('date', endStr)
+        .not('check_in', 'is', null)
+
+      if (error) throw error
+
+      const matchesBranch = (loc: string | null | undefined) => {
+        const l = (loc || 'calicut').toLowerCase()
+        if (activeBranch === 'global') return true
+        if (activeBranch === 'calicut') return l === 'calicut' || loc == null || String(loc).trim() === ''
+        return l === activeBranch.toLowerCase()
+      }
+
+      const byDate: Record<string, Set<string>> = {}
+
+      for (const row of data || []) {
+        const r = row as {
+          date: string
+          branch_location?: string | null
+          staff_profiles?: { full_name?: string | null } | null
+        }
+        if (!matchesBranch(r.branch_location)) continue
+        const full = r.staff_profiles?.full_name?.trim() || ''
+        const first = full.split(/\s+/).filter(Boolean)[0] || '—'
+        const d = r.date
+        if (!byDate[d]) byDate[d] = new Set()
+        byDate[d].add(first)
+      }
+
+      const result: Record<string, string[]> = {}
+      for (const [d, set] of Object.entries(byDate)) {
+        result[d] = Array.from(set).sort((a, b) => a.localeCompare(b))
+      }
+      return result
+    },
+    staleTime: STALE_TIME,
+    refetchInterval: STALE_TIME,
+    refetchOnWindowFocus: true,
+  })
+}
+
 // Default fallback templates if DB is empty/inaccessible
 const DEFAULT_PRE_EXAM = {
   id: 'default-pre-exam',
