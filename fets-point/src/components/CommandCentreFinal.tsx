@@ -4,7 +4,7 @@ import {
     Users, Activity, CheckCircle, Sparkles,
     Settings, ChevronRight, ChevronDown, Bell, AlertTriangle, Shield, ClipboardList,
     AlertCircle, Star, MessageSquare, Search, X,
-    ExternalLink, Globe, TrendingUp, Calendar, MapPin,
+    Globe, TrendingUp, Calendar, MapPin, Headphones,
     Building2, Clock, Zap, Lock, Unlock, Key, Copy,
     Eye, EyeOff, Plus, Trash2, Crown, Database, Briefcase,
     Server, ShieldCheck, ArrowUpRight, BookOpen, Phone,
@@ -14,7 +14,7 @@ import {
 import { useAuth } from '../hooks/useAuth'
 import { useBranch } from '../hooks/useBranch'
 import { toast } from 'react-hot-toast'
-import { useDashboardStats, useUpcomingSchedule, useSevenDayStaffAttendance } from '../hooks/useCommandCentre'
+import { useDashboardStats, useUpcomingSchedule, useSevenDayRosterStaff } from '../hooks/useCommandCentre'
 import { useNews } from '../hooks/useNewsManager'
 import { AccessHub } from './AccessHub'
 import { MobileHome } from './MobileHome'
@@ -51,6 +51,15 @@ function getExamColor(clientName: string) {
 
 const BRANCH_LABELS: Record<string, string> = { calicut: 'Calicut', cochin: 'Cochin', global: 'All Centres' }
 
+/** Test-centre live support (opens in new tab) */
+const LIVE_SUPPORT_PROVIDERS: { name: string; url: string; logoDomain: string }[] = [
+    { name: 'Prometric', url: 'https://ehelp.prometric.com/', logoDomain: 'prometric.com' },
+    { name: 'Pearson Vue', url: 'https://www.pearsonvue.com/us/en/help/chat.html', logoDomain: 'pearsonvue.com' },
+    { name: 'PSI', url: 'https://gps.psiexams.com/test-center-alerts', logoDomain: 'psiexams.com' },
+    { name: 'CELPIP', url: 'https://ehelp.prometric.com/Paragon', logoDomain: 'celpip.ca' },
+    { name: 'ITTS', url: 'https://tds.surpass.com/help/', logoDomain: 'surpass.com' },
+]
+
 export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: (tab: string) => void; onAiQuery?: (query: string) => void }) {
     const { profile, user } = useAuth()
     const { activeBranch, setActiveBranch } = useBranch()
@@ -86,14 +95,12 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
 
     const { data: dashboardData, isLoading: isLoadingStats } = useDashboardStats()
     const { data: examSchedule = [], isLoading: isLoadingSchedule } = useUpcomingSchedule()
-    const { data: staffByDate = {}, isLoading: isLoadingStaffAttendance } = useSevenDayStaffAttendance()
+    const { data: staffByDate = {}, isLoading: isLoadingRosterStaff } = useSevenDayRosterStaff()
     const { data: newsItems = [] } = useNews()
 
     const [opsMetrics, setOpsMetrics] = useState({ healthScore: 100, critical: 0, open: 0, topIssue: 'Stable' })
     const [loadingAnalysis, setLoadingAnalysis] = useState(true)
     const [activeCenter, setActiveCenter] = useState<string>('all')
-    const [portals, setPortals] = useState<any[]>([])
-    const [portalsLoading, setPortalsLoading] = useState(true)
     const [vaultEntries, setVaultEntries] = useState<any[]>([])
     const [vaultLoading, setVaultLoading] = useState(true)
     const [vaultSearch, setVaultSearch] = useState('')
@@ -165,60 +172,13 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
         }
     }, [])
 
-    const fetchPortals = React.useCallback(async () => {
-        try {
-            const { data } = await supabase.from('clients').select('*').order('name', { ascending: true })
-            if (data) {
-                // Map clients to portals format
-                const mappedPortals = data.map((client: any) => {
-                    let url = '#'
-                    let logo = client.logo_url || ''
-                    
-                    // Map known URLs and logos if not present in DB
-                    if (client.name.toUpperCase().includes('CELPIP')) {
-                        url = 'https://www.celpip.ca'
-                        if (!logo) logo = '/client-logos/celpip.jpg'
-                    } else if (client.name.toUpperCase().includes('CMA')) {
-                        url = 'https://proscheduler.prometric.com/home'
-                        if (!logo) logo = '/client-logos/cma_us.png'
-                    } else if (client.name.toUpperCase().includes('PEARSON')) {
-                        url = 'https://connect.pearsonvue.com/'
-                        if (!logo) logo = '/client-logos/pearson_vue.png'
-                    } else if (client.name.toUpperCase().includes('PROMETRIC')) {
-                        url = 'https://easyserve.prometric.com/my.policy'
-                        if (!logo) logo = '/client-logos/prometric.png'
-                    } else if (client.name.toUpperCase().includes('PSI')) {
-                        url = 'https://gps.psiexams.com/login'
-                        if (!logo) logo = '/client-logos/psi.png'
-                    } else if (client.name.toUpperCase().includes('ITTS')) {
-                        url = 'https://tds.surpass.com/account/login/'
-                        if (!logo) logo = '/client-logos/itts.png'
-                    }
-
-                    return {
-                        name: client.name,
-                        url: url,
-                        color: client.color || '#f6c810',
-                        logo: logo
-                    }
-                })
-                setPortals(mappedPortals)
-            }
-        } catch (e) {
-            console.error('Portals load failed', e)
-        } finally {
-            setPortalsLoading(false)
-        }
-    }, [])
-
     useEffect(() => {
         if (user?.id) { 
             fetchAnalysis(); 
             fetchVault();
-            fetchPortals();
             if (isMithun) fetchPendingRequests();
         }
-    }, [user?.id, fetchAnalysis, fetchVault, fetchPortals, fetchPendingRequests, isMithun])
+    }, [user?.id, fetchAnalysis, fetchVault, fetchPendingRequests, isMithun])
 
     const copyToClipboard = (text: string, label: string) => {
         navigator.clipboard.writeText(text)
@@ -341,7 +301,6 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
     }, [dashboardData?.todaysExams, activeBranch]);
 
     const totalCandidates = filteredTodaysExams.reduce((s: number, e: any) => s + (e.candidate_count || 0), 0)
-    const totalSessions = filteredTodaysExams.length
     const healthColor = opsMetrics.healthScore >= 80 ? '#10b981' : opsMetrics.healthScore >= 50 ? '#f59e0b' : '#ef4444'
 
     if (isLoadingStats) {
@@ -608,12 +567,11 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                 )}
 
                 {/* ═══════════════════════════════════════════════════════
-                    TODAY'S OPS GLIMPSE & QUICK LAUNCH
+                    CANDIDATES · RAISE A CASE · LIVE SUPPORT
                 ═══════════════════════════════════════════════════════ */}
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12">
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
                     {[
-                        { label: 'Sessions Today', value: totalSessions, icon: Calendar, color: '#FACC15', sub: `${activeBranch !== 'global' ? activeBranch : 'all centres'}` },
                         { label: 'Candidates', value: totalCandidates, icon: Users, color: '#BADFE7', sub: 'registered today' },
                     ].map((stat, i) => (
                         <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.1 }}
@@ -659,37 +617,53 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                             <div className="text-[8px] md:text-[9px] text-white/20 mt-1.5 uppercase tracking-widest font-bold leading-none">open incidents · tap to report</div>
                         </div>
                     </motion.button>
+                </motion.div>
 
-                    {/* Quick Launch (4th Box) */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                        className="sov-card group relative overflow-hidden h-[160px] flex flex-col justify-between p-3 border-[#FACC15]/10 hover:border-[#FACC15]/30 transition-all">
-                        <div className="flex items-center justify-between mb-3 px-1">
-                            <div className="text-[8px] md:text-[9px] font-black text-white/60 tracking-wider uppercase flex items-center gap-1.5">
-                                <ExternalLink size={10} className="text-[#FACC15]" />
-                                Quick Launch
+                {/* Live support — full width */}
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="sov-card mb-12 p-5 md:p-8"
+                >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-sm bg-[#FACC15]/10 border border-[#FACC15]/25 flex items-center justify-center shrink-0">
+                                <Headphones size={20} className="text-[#FACC15]" aria-hidden />
+                            </div>
+                            <div>
+                                <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-tight leading-none">Live Support</h3>
+                                <p className="text-[10px] md:text-xs text-white/45 uppercase tracking-[0.2em] font-bold mt-2">Test centre vendor portals · opens in a new tab</p>
                             </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-1 md:gap-1.5 h-full content-start">
-                            {portals.slice(0, 6).map((portal, i) => (
-                                <a
-                                    key={i}
-                                    href={portal.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex flex-col items-center justify-center py-2 px-1 bg-white/5 rounded-lg hover:bg-[#FACC15]/10 group/portal transition-colors aspect-square border border-transparent hover:border-white/10"
-                                >
-                                    <div className="w-4 h-4 md:w-6 md:h-6 mb-1.5 flex items-center justify-center">
-                                        <img src={portal.logo} alt={portal.name} className="max-w-full max-h-full object-contain opacity-60 group-hover/portal:opacity-100 transition-opacity" referrerPolicy="no-referrer" 
-                                            onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${portal.name}&background=121214&color=f6c810` }}
-                                        />
-                                    </div>
-                                    <div className="text-[5px] md:text-[6px] font-bold text-white/30 group-hover/portal:text-[#FACC15] uppercase tracking-widest text-center leading-none truncate w-full px-0.5">
-                                        {portal.name}
-                                    </div>
-                                </a>
-                            ))}
-                        </div>
-                    </motion.div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+                        {LIVE_SUPPORT_PROVIDERS.map((p) => (
+                            <a
+                                key={p.name}
+                                href={p.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center justify-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] hover:border-[#FACC15]/35 hover:bg-[#FACC15]/[0.06] px-4 py-6 transition-all duration-300 min-h-[140px]"
+                            >
+                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-[#FACC15]/30">
+                                    <img
+                                        src={`https://www.google.com/s2/favicons?domain=${p.logoDomain}&sz=128`}
+                                        alt=""
+                                        className="w-9 h-9 md:w-10 md:h-10 object-contain opacity-90"
+                                        onError={(e) => {
+                                            const el = e.target as HTMLImageElement
+                                            el.onerror = null
+                                            el.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=121214&color=FACC15&size=128`
+                                        }}
+                                    />
+                                </div>
+                                <span className="text-[11px] md:text-xs font-black text-white/80 uppercase tracking-widest text-center group-hover:text-[#FACC15] transition-colors leading-tight">
+                                    {p.name}
+                                </span>
+                            </a>
+                        ))}
+                    </div>
                 </motion.div>
 
                 {/* ═══════════════════════════════════════════════════════
@@ -700,7 +674,7 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     isLoading={isLoadingSchedule}
                     activeBranch={activeBranch}
                     staffByDate={staffByDate}
-                    staffLoading={isLoadingStaffAttendance}
+                    staffLoading={isLoadingRosterStaff}
                 />
 
                 {/* ═══════════════════════════════════════════════════════

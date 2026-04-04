@@ -130,12 +130,29 @@ export const useUpcomingSchedule = () => {
   })
 }
 
-/** Checked-in staff per calendar date (IST), for the 7-day outlook — synced with active branch */
-export const useSevenDayStaffAttendance = () => {
+/** Roster staff per calendar date (IST) from `roster_schedules` — aligned with active test centre */
+export const useSevenDayRosterStaff = () => {
   const { activeBranch } = useBranch()
 
+  const OFF_SHIFTS = new Set(['RD', 'L', 'TOIL'])
+
+  const isRosterPresent = (shiftCode: string | null | undefined) => {
+    if (shiftCode == null || String(shiftCode).trim() === '') return false
+    const c = String(shiftCode).trim().toUpperCase()
+    return !OFF_SHIFTS.has(c)
+  }
+
+  const matchesCentre = (branch: string | null | undefined) => {
+    if (activeBranch === 'global') return true
+    const b = (branch || '').trim().toLowerCase()
+    if (activeBranch === 'calicut') return !b || b === 'calicut' || b === 'both'
+    if (activeBranch === 'cochin') return b === 'cochin' || b === 'both'
+    if (activeBranch === 'kannur') return b === 'kannur' || b === 'both'
+    return b === activeBranch.toLowerCase()
+  }
+
   return useQuery({
-    queryKey: ['sevenDayStaffAttendance', activeBranch],
+    queryKey: ['sevenDayRosterStaff', activeBranch],
     queryFn: async () => {
       const startStr = getCurrentISTDateString()
       const start = createISTDate(startStr)
@@ -144,30 +161,23 @@ export const useSevenDayStaffAttendance = () => {
       const endStr = formatDateForIST(end)
 
       const { data, error } = await supabase
-        .from('staff_attendance')
-        .select('date, branch_location, check_in, staff_profiles(full_name)')
+        .from('roster_schedules')
+        .select('date, shift_code, profile_id, staff_profiles(full_name, branch_assigned)')
         .gte('date', startStr)
         .lte('date', endStr)
-        .not('check_in', 'is', null)
 
       if (error) throw error
-
-      const matchesBranch = (loc: string | null | undefined) => {
-        const l = (loc || 'calicut').toLowerCase()
-        if (activeBranch === 'global') return true
-        if (activeBranch === 'calicut') return l === 'calicut' || loc == null || String(loc).trim() === ''
-        return l === activeBranch.toLowerCase()
-      }
 
       const byDate: Record<string, Set<string>> = {}
 
       for (const row of data || []) {
         const r = row as {
           date: string
-          branch_location?: string | null
-          staff_profiles?: { full_name?: string | null } | null
+          shift_code?: string | null
+          staff_profiles?: { full_name?: string | null; branch_assigned?: string | null } | null
         }
-        if (!matchesBranch(r.branch_location)) continue
+        if (!isRosterPresent(r.shift_code)) continue
+        if (!matchesCentre(r.staff_profiles?.branch_assigned)) continue
         const full = r.staff_profiles?.full_name?.trim() || ''
         const first = full.split(/\s+/).filter(Boolean)[0] || '—'
         const d = r.date
