@@ -89,7 +89,7 @@ export function SevenDayExamOutlook({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15 }}
-      className="sov-card mb-12 !p-0 overflow-hidden"
+      className="sov-card mb-8 !p-0 overflow-hidden"
       aria-label="Seven day exam outlook"
     >
       <div className="px-5 md:px-8 pt-6 md:pt-8 pb-4 border-b border-white/[0.06]">
@@ -106,7 +106,7 @@ export function SevenDayExamOutlook({
         </div>
       </div>
 
-      <div className="flex overflow-x-auto snap-x snap-mandatory md:snap-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent bg-[#121214]/80">
+      <div className="flex overflow-x-auto snap-x snap-mandatory md:snap-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent bg-black/[0.08]">
         {dayKeys.map((ymd) => {
           const { line1, line2, isToday } = dayHeaderLabel(ymd, todayYmd)
           const daySessions = byDate.get(ymd) || []
@@ -197,7 +197,7 @@ export function SevenDayExamOutlook({
                 )}
               </div>
 
-              <div className="shrink-0 border-t border-white/[0.08] bg-black/40 p-4 mt-auto">
+              <div className="shrink-0 border-t border-white/[0.08] bg-black/25 p-4 mt-auto">
                 <div className="flex items-center gap-2 mb-2 text-[#FACC15]/80">
                   <UserCircle2 size={16} className="shrink-0" aria-hidden />
                   <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.18em]">Staff (roster)</span>

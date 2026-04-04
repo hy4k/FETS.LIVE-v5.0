@@ -51,13 +51,13 @@ function getExamColor(clientName: string) {
 
 const BRANCH_LABELS: Record<string, string> = { calicut: 'Calicut', cochin: 'Cochin', global: 'All Centres' }
 
-/** Test-centre live support (opens in new tab) */
-const LIVE_SUPPORT_PROVIDERS: { name: string; url: string; logoDomain: string }[] = [
-    { name: 'Prometric', url: 'https://ehelp.prometric.com/', logoDomain: 'prometric.com' },
-    { name: 'Pearson Vue', url: 'https://www.pearsonvue.com/us/en/help/chat.html', logoDomain: 'pearsonvue.com' },
-    { name: 'PSI', url: 'https://gps.psiexams.com/test-center-alerts', logoDomain: 'psiexams.com' },
-    { name: 'CELPIP', url: 'https://ehelp.prometric.com/Paragon', logoDomain: 'celpip.ca' },
-    { name: 'ITTS', url: 'https://tds.surpass.com/help/', logoDomain: 'surpass.com' },
+/** Test-centre vendor portals (official brand assets in /public/live-support/) */
+const LIVE_SUPPORT_PROVIDERS: { name: string; url: string; image: string }[] = [
+    { name: 'Prometric', url: 'https://ehelp.prometric.com/', image: '/live-support/prometric.png' },
+    { name: 'Pearson Vue', url: 'https://www.pearsonvue.com/us/en/help/chat.html', image: '/live-support/pearson-vue.png' },
+    { name: 'PSI', url: 'https://gps.psiexams.com/test-center-alerts', image: '/live-support/psi.png' },
+    { name: 'CELPIP', url: 'https://ehelp.prometric.com/Paragon', image: '/live-support/celpip.png' },
+    { name: 'ITTS', url: 'https://tds.surpass.com/help/', image: '/live-support/itts.png' },
 ]
 
 export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: (tab: string) => void; onAiQuery?: (query: string) => void }) {
@@ -567,10 +567,10 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                 )}
 
                 {/* ═══════════════════════════════════════════════════════
-                    CANDIDATES · RAISE A CASE · LIVE SUPPORT
+                    CANDIDATES · RAISE A CASE
                 ═══════════════════════════════════════════════════════ */}
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
                     {[
                         { label: 'Candidates', value: totalCandidates, icon: Users, color: '#BADFE7', sub: 'registered today' },
                     ].map((stat, i) => (
@@ -619,53 +619,6 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     </motion.button>
                 </motion.div>
 
-                {/* Live support — full width */}
-                <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="sov-card mb-12 p-5 md:p-8"
-                >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-sm bg-[#FACC15]/10 border border-[#FACC15]/25 flex items-center justify-center shrink-0">
-                                <Headphones size={20} className="text-[#FACC15]" aria-hidden />
-                            </div>
-                            <div>
-                                <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-tight leading-none">Live Support</h3>
-                                <p className="text-[10px] md:text-xs text-white/45 uppercase tracking-[0.2em] font-bold mt-2">Test centre vendor portals · opens in a new tab</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-                        {LIVE_SUPPORT_PROVIDERS.map((p) => (
-                            <a
-                                key={p.name}
-                                href={p.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex flex-col items-center justify-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] hover:border-[#FACC15]/35 hover:bg-[#FACC15]/[0.06] px-4 py-6 transition-all duration-300 min-h-[140px]"
-                            >
-                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-[#FACC15]/30">
-                                    <img
-                                        src={`https://www.google.com/s2/favicons?domain=${p.logoDomain}&sz=128`}
-                                        alt=""
-                                        className="w-9 h-9 md:w-10 md:h-10 object-contain opacity-90"
-                                        onError={(e) => {
-                                            const el = e.target as HTMLImageElement
-                                            el.onerror = null
-                                            el.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=121214&color=FACC15&size=128`
-                                        }}
-                                    />
-                                </div>
-                                <span className="text-[11px] md:text-xs font-black text-white/80 uppercase tracking-widest text-center group-hover:text-[#FACC15] transition-colors leading-tight">
-                                    {p.name}
-                                </span>
-                            </a>
-                        ))}
-                    </div>
-                </motion.div>
-
                 {/* ═══════════════════════════════════════════════════════
                     7-DAY EXAM OUTLOOK (syncs with centre selector)
                 ═══════════════════════════════════════════════════════ */}
@@ -676,6 +629,45 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     staffByDate={staffByDate}
                     staffLoading={isLoadingRosterStaff}
                 />
+
+                {/* Live support — compact strip below outlook */}
+                <motion.section
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.18 }}
+                    className="sov-card mb-10 !p-0 overflow-hidden"
+                    aria-label="Test centre live support portals"
+                >
+                    <div className="px-4 md:px-5 py-3 md:py-3.5 border-b border-white/[0.06] flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-sm bg-[#FACC15]/10 border border-[#FACC15]/25 flex items-center justify-center shrink-0">
+                            <Headphones size={17} className="text-[#FACC15]" aria-hidden />
+                        </div>
+                        <h3 className="text-sm md:text-base font-black text-white uppercase tracking-[0.12em] leading-none">Live Support</h3>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-white/[0.06]">
+                        {LIVE_SUPPORT_PROVIDERS.map((p) => (
+                            <a
+                                key={p.name}
+                                href={p.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={`${p.name} — opens in a new tab`}
+                                className="group flex flex-col items-center justify-center gap-2 bg-[var(--sov-obsidian)] hover:bg-[#FACC15]/[0.06] px-2 py-3 md:py-3.5 min-h-[88px] md:min-h-[92px] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#FACC15]/40"
+                            >
+                                <div className="w-full max-w-[140px] h-9 md:h-10 flex items-center justify-center px-1">
+                                    <img
+                                        src={p.image}
+                                        alt={p.name}
+                                        className="max-h-full max-w-full w-auto h-auto object-contain object-center opacity-[0.92] group-hover:opacity-100 transition-opacity"
+                                        loading="lazy"
+                                        decoding="async"
+                                    />
+                                </div>
+                                <span className="sr-only">{p.name}</span>
+                            </a>
+                        ))}
+                    </div>
+                </motion.section>
 
                 {/* ═══════════════════════════════════════════════════════
                     F-VAULT — Secure Document Repository
