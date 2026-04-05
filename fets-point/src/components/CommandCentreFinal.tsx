@@ -25,6 +25,7 @@ import { useAppModules } from '../hooks/useAppModules'
 import { LocationSelectorThread } from './LocationSelectorThread'
 import { SevenDayExamOutlook } from './SevenDayExamOutlook'
 import { QuickAccessSection } from './QuickAccessSection'
+import { LIVE_SUPPORT_CLIENTS } from '../constants/liveSupportClients'
 import { format } from 'date-fns'
 
 // Exam type color map
@@ -50,15 +51,6 @@ function getExamColor(clientName: string) {
 }
 
 const BRANCH_LABELS: Record<string, string> = { calicut: 'Calicut', cochin: 'Cochin', global: 'All Centres' }
-
-/** Test-centre vendor portals (official brand assets in /public/live-support/) */
-const LIVE_SUPPORT_PROVIDERS: { name: string; url: string; image: string }[] = [
-    { name: 'Prometric', url: 'https://ehelp.prometric.com/', image: '/live-support/prometric.png' },
-    { name: 'Pearson Vue', url: 'https://www.pearsonvue.com/us/en/help/chat.html', image: '/live-support/pearson-vue.png' },
-    { name: 'PSI', url: 'https://gps.psiexams.com/test-center-alerts', image: '/live-support/psi.png' },
-    { name: 'CELPIP', url: 'https://ehelp.prometric.com/Paragon', image: '/live-support/celpip.png' },
-    { name: 'ITTS', url: 'https://tds.surpass.com/help/', image: '/live-support/itts.png' },
-]
 
 export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: (tab: string) => void; onAiQuery?: (query: string) => void }) {
     const { profile, user } = useAuth()
@@ -531,10 +523,10 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                         <h3 className="text-sm md:text-base font-black text-white uppercase tracking-[0.12em] leading-none">Live Support</h3>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 md:gap-3 p-3 md:p-4 bg-gradient-to-b from-black/[0.18] to-transparent">
-                        {LIVE_SUPPORT_PROVIDERS.map((p) => (
+                        {LIVE_SUPPORT_CLIENTS.map((p) => (
                             <a
-                                key={p.name}
-                                href={p.url}
+                                key={p.slug}
+                                href={p.supportUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title={`${p.name} — opens in a new tab`}
