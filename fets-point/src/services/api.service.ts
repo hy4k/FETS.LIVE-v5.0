@@ -454,17 +454,22 @@ export const staffService = {
     }
   },
 
-  async delete(id: string) {
+  /** Soft-archive: keeps profile for roster/payroll history. */
+  async archive(id: string, employmentEndDate: string) {
     try {
       const { error } = await supabase
         .from('staff_profiles')
-        .delete()
+        .update({
+          is_active: false,
+          employment_end_date: employmentEndDate,
+          updated_at: new Date().toISOString(),
+        } as any)
         .eq('id', id)
 
       if (error) throw new ApiError(error.message, error.code, error.details)
     } catch (error) {
       if (error instanceof ApiError) throw error
-      throw new ApiError(`Failed to delete staff profile ${id}`, 'DELETE_ERROR', error)
+      throw new ApiError(`Failed to archive staff profile ${id}`, 'ARCHIVE_ERROR', error)
     }
   }
 }

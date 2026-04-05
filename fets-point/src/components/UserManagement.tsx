@@ -12,6 +12,7 @@ import { useStaff, useStaffMutations } from '../hooks/useStaffManagement'
 import { toast } from 'react-hot-toast'
 import { StaffProfile } from '../types/shared'
 import { getAvailableBranches, formatBranchName } from '../utils/authUtils'
+import { getCurrentISTDateString } from '../utils/dateUtils'
 import { ClientControl } from './ClientControl'
 import { useAppModules } from '../hooks/useAppModules'
 
@@ -54,7 +55,7 @@ interface UserManagementProps {
 export function UserManagement({ onNavigate }: UserManagementProps = {}) {
     const { profile: currentUser, hasPermission } = useAuth()
     const { data: staff = [], isLoading } = useStaff()
-    const { updateStaff, deleteStaff, addStaff } = useStaffMutations()
+    const { updateStaff, archiveStaff, addStaff } = useStaffMutations()
 
     const [searchTerm, setSearchTerm] = useState('')
     const [branchFilter, setBranchFilter] = useState<string>('all')
@@ -101,9 +102,19 @@ export function UserManagement({ onNavigate }: UserManagementProps = {}) {
 
     const handleDeleteUser = async () => {
         if (!selectedUser) return
-        if (!window.confirm(`Are you sure you want to permanently delete ${selectedUser.full_name}?`)) return
+        const dateStr = window.prompt(
+            `Archive ${selectedUser.full_name} — last working day for roster/payroll (YYYY-MM-DD). They stay on the roster for that calendar month.`,
+            getCurrentISTDateString()
+        )
+        if (dateStr === null) return
+        const trimmed = dateStr.trim()
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+            toast.error('Invalid date. Use YYYY-MM-DD.')
+            return
+        }
+        if (!window.confirm(`Archive ${selectedUser.full_name} with end date ${trimmed}?`)) return
         try {
-            await deleteStaff(selectedUser.id)
+            await archiveStaff({ staffId: selectedUser.id, employmentEndDate: trimmed })
             setSelectedUser(null)
         } catch (error: any) {
             console.error(error)

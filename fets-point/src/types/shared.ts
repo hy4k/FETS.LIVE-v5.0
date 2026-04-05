@@ -4,6 +4,8 @@ export type StaffProfile = Database['public']['Tables']['staff_profiles']['Row']
   id: string;
   user_id: string;
   full_name: string;
+  is_active?: boolean | null;
+  employment_end_date?: string | null;
   avatar_url?: string | null;
   branch_assigned?: string | null;
   role?: string;

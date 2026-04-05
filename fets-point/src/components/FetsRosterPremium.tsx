@@ -654,7 +654,7 @@ export function FetsRosterPremium() {
       setLoading(true)
       const { data: profiles, error: profilesError } = await supabase
         .from('staff_profiles')
-        .select('id, user_id, full_name, role, email, department, branch_assigned')
+        .select('id, user_id, full_name, role, email, department, branch_assigned, is_active, employment_end_date')
         .not('full_name', 'in', '("MITHUN","NIYAS","Mithun","Niyas")')
         .order('full_name')
 
@@ -662,10 +662,12 @@ export function FetsRosterPremium() {
 
       const mappedProfiles: StaffProfile[] = (profiles || []).map(p => ({
         id: p.id, user_id: p.user_id, full_name: p.full_name,
-        role: p.role, email: p.email || '', department: p.department, branch_assigned: p.branch_assigned
+        role: p.role, email: p.email || '', department: p.department, branch_assigned: p.branch_assigned,
+        is_active: p.is_active, employment_end_date: p.employment_end_date
       } as StaffProfile))
 
       const { startDate, endDate } = getViewDateRange()
+      const monthStartStr = startDate.toISOString().split('T')[0]
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('roster_schedules')
         .select('id, profile_id, date, shift_code, overtime_hours, status, created_at, updated_at')
@@ -678,16 +680,23 @@ export function FetsRosterPremium() {
       const sData = scheduleData || []
 
       const relevantProfiles = mappedProfiles.filter(p => {
-        if (activeBranch === 'global') return true;
-        if (p.branch_assigned === activeBranch) return true;
-        
-        // They are not in the current activeBranch.
-        // Include them if they are an "old staff" (no branch assigned or inactive) AND have a shift this month.
-        const isUnassigned = !p.branch_assigned || p.branch_assigned.trim() === '' || p.branch_assigned === 'inactive';
-        const hasShift = sData.some(s => s.profile_id === p.id);
-        
-        if (isUnassigned && hasShift) return true;
-        return false;
+        let branchOk = false
+        if (activeBranch === 'global') branchOk = true
+        else if (p.branch_assigned === activeBranch) branchOk = true
+        else {
+          const isUnassigned = !p.branch_assigned || p.branch_assigned.trim() === '' || p.branch_assigned === 'inactive'
+          const hasShift = sData.some(s => s.profile_id === p.id)
+          branchOk = isUnassigned && hasShift
+        }
+        if (!branchOk) return false
+
+        // Archived staff: show for the month of employment_end_date (and earlier months), for salary/roster history.
+        const isActive = p.is_active !== false
+        if (isActive) return true
+        const end = p.employment_end_date
+        if (end && end >= monthStartStr) return true
+        if (!end && sData.some(s => s.profile_id === p.id)) return true
+        return false
       })
 
       setStaffProfiles(relevantProfiles)

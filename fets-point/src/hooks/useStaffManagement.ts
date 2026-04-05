@@ -64,8 +64,21 @@ const updateStaff = async ({ id, ...updatedData }: Partial<StaffProfile> & { id:
   return data
 }
 
-const deleteStaff = async (staffId: string) => {
-  const { error } = await supabase.from('staff_profiles').delete().eq('id', staffId)
+/** Archives staff (soft delete): keeps the row for roster/salary history. */
+const archiveStaff = async ({
+  staffId,
+  employmentEndDate,
+}: {
+  staffId: string
+  employmentEndDate: string
+}) => {
+  const { error } = await supabase
+    .from('staff_profiles')
+    .update({
+      is_active: false,
+      employment_end_date: employmentEndDate,
+    })
+    .eq('id', staffId)
 
   if (error) throw new Error(error.message)
   return staffId
@@ -99,14 +112,17 @@ export const useStaffMutations = () => {
     },
   })
 
-  const deleteStaffMutation = useMutation({
-    mutationFn: deleteStaff,
+  const archiveStaffMutation = useMutation({
+    mutationFn: archiveStaff,
     onSuccess: () => {
-      toast.success('Staff member deleted successfully!')
+      toast.success('Staff archived — they remain on the roster for the month of their end date.')
       queryClient.invalidateQueries({ queryKey: ['staff'] })
+      queryClient.invalidateQueries({ queryKey: ['profiles'] })
+      queryClient.invalidateQueries({ queryKey: ['roster'] })
+      queryClient.invalidateQueries({ queryKey: ['sevenDayRosterStaff'] })
     },
     onError: (error) => {
-      toast.error(`Failed to delete staff: ${error.message}`)
+      toast.error(`Failed to archive staff: ${error.message}`)
     },
   })
 
@@ -115,7 +131,7 @@ export const useStaffMutations = () => {
     isAdding: addStaffMutation.isPending,
     updateStaff: updateStaffMutation.mutateAsync,
     isUpdating: updateStaffMutation.isPending,
-    deleteStaff: deleteStaffMutation.mutateAsync,
-    isDeleting: deleteStaffMutation.isPending,
+    archiveStaff: archiveStaffMutation.mutateAsync,
+    isArchiving: archiveStaffMutation.isPending,
   }
 }

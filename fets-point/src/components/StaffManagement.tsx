@@ -21,6 +21,7 @@ import { toast } from 'react-hot-toast'
 import { useStaff, useStaffMutations } from '../hooks/useStaffManagement'
 import { ProfilePictureUpload } from './ProfilePictureUpload'
 import { Database } from '../types/database.types'
+import { getCurrentISTDateString } from '../utils/dateUtils'
 type StaffProfile = Database['public']['Tables']['staff_profiles']['Row']
 
 interface BaseCentreBadgeProps {
@@ -85,7 +86,7 @@ interface EditStaffModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (updatedStaff: Partial<StaffProfile>) => void
-  onDelete: (staffId: string) => void
+  onDelete: (staffId: string, employmentEndDate: string) => Promise<void>
   isSuperAdmin: boolean
 }
 
@@ -93,11 +94,12 @@ interface DeleteConfirmationModalProps {
   staff: StaffProfile
   isOpen: boolean
   onClose: () => void
-  onConfirm: () => void
+  onConfirm: (employmentEndDate: string) => Promise<void>
 }
 
 function DeleteConfirmationModal({ staff, isOpen, onClose, onConfirm }: DeleteConfirmationModalProps) {
   const [nameInput, setNameInput] = useState('')
+  const [employmentEndDate, setEmploymentEndDate] = useState('')
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState(false)
 
@@ -106,13 +108,17 @@ function DeleteConfirmationModal({ staff, isOpen, onClose, onConfirm }: DeleteCo
       setError('Entered name does not match. Please try again.')
       return
     }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(employmentEndDate.trim())) {
+      setError('Use last working day as YYYY-MM-DD.')
+      return
+    }
 
     setDeleting(true)
     try {
-      await onConfirm()
+      await onConfirm(employmentEndDate.trim())
       onClose()
     } catch (error) {
-      setError('Failed to delete staff member')
+      setError('Failed to archive staff member')
     } finally {
       setDeleting(false)
     }
@@ -122,6 +128,7 @@ function DeleteConfirmationModal({ staff, isOpen, onClose, onConfirm }: DeleteCo
     if (isOpen) {
       setNameInput('')
       setError('')
+      setEmploymentEndDate(getCurrentISTDateString())
     }
   }, [isOpen])
 
@@ -143,8 +150,8 @@ function DeleteConfirmationModal({ staff, isOpen, onClose, onConfirm }: DeleteCo
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-red-900">Delete Staff Member</h3>
-                <p className="text-sm text-red-700">This action cannot be undone</p>
+                <h3 className="text-lg font-bold text-red-900">Archive staff member</h3>
+                <p className="text-sm text-red-700">Profile is kept for roster and payroll history</p>
               </div>
             </div>
           </div>
@@ -152,14 +159,26 @@ function DeleteConfirmationModal({ staff, isOpen, onClose, onConfirm }: DeleteCo
           <div className="p-6 space-y-4">
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
               <p className="text-sm text-amber-800 font-medium mb-2">
-                Are you sure you want to permanently delete this staff member?
+                They will be removed from day-to-day lists but stay on the roster for the month of their last working day (for salary).
               </p>
               <p className="text-xs text-amber-700">
-                This will remove them from all active staff lists, user login/permissions, and future assignments. Historical data will remain intact.
+                Set the last day to count for March payroll if they resigned mid-March (e.g. 2026-03-15).
               </p>
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Last working day (YYYY-MM-DD)
+              </label>
+              <input
+                type="date"
+                value={employmentEndDate}
+                onChange={(e) => {
+                  setEmploymentEndDate(e.target.value)
+                  setError('')
+                }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 mb-4"
+              />
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 To confirm, type the staff member's exact name:
               </label>
@@ -203,7 +222,7 @@ function DeleteConfirmationModal({ staff, isOpen, onClose, onConfirm }: DeleteCo
               ) : (
                 <>
                   <Trash2 className="w-4 h-4" />
-                  <span>Delete Permanently</span>
+                  <span>Archive</span>
                 </>
               )}
             </button>
@@ -245,15 +264,14 @@ function EditStaffModal({ staff, isOpen, onClose, onSave, onDelete, isSuperAdmin
     }
   }
 
-  const handleDelete = async () => {
+  const handleDelete = async (employmentEndDate: string) => {
     if (!staff) return
 
     try {
-      await onDelete(staff.id)
-      toast.success(`Staff member ${staff.full_name} has been successfully deleted`)
+      await onDelete(staff.id, employmentEndDate)
       onClose()
     } catch (error) {
-      toast.error('Failed to delete staff member')
+      toast.error('Failed to archive staff member')
     }
   }
 
@@ -366,7 +384,7 @@ function EditStaffModal({ staff, isOpen, onClose, onSave, onDelete, isSuperAdmin
                 className="w-full px-4 py-3 text-red-700 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 font-medium transition-colors flex items-center justify-center space-x-2"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>Delete Staff Member</span>
+                <span>Archive staff member</span>
               </button>
             )}
           </div>
@@ -474,7 +492,7 @@ function AddStaffModal({ isOpen, onClose, onSuccess }: AddStaffModalProps) {
 export function StaffManagement() {
   const { activeBranch, userAccessLevel } = useBranch()
   const { data: staff = [], isLoading, isError, error } = useStaff()
-  const { addStaff, updateStaff, deleteStaff, isAdding, isUpdating, isDeleting } = useStaffMutations()
+  const { addStaff, updateStaff, archiveStaff, isAdding, isUpdating, isArchiving } = useStaffMutations()
 
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCentre, setSelectedCentre] = useState<string>('all')
@@ -524,8 +542,8 @@ export function StaffManagement() {
     setEditingStaff(null)
   }
 
-  const handleDeleteStaff = async (staffId: string) => {
-    await deleteStaff(staffId)
+  const handleDeleteStaff = async (staffId: string, employmentEndDate: string) => {
+    await archiveStaff({ staffId, employmentEndDate })
     setShowEditModal(false)
     setEditingStaff(null)
   }
@@ -676,7 +694,17 @@ export function StaffManagement() {
                         size="sm"
                       />
                       <div>
-                        <p className="font-medium text-gray-900">{staffMember.full_name}</p>
+                        <p className="font-medium text-gray-900 flex flex-wrap items-center gap-2">
+                          {staffMember.full_name}
+                          {staffMember.is_active === false && (
+                            <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-200 text-gray-700">
+                              Archived
+                              {staffMember.employment_end_date
+                                ? ` · ended ${staffMember.employment_end_date}`
+                                : ''}
+                            </span>
+                          )}
+                        </p>
                         <p className="text-sm text-gray-500">
                           {staffMember.email || 'No email'}
                         </p>

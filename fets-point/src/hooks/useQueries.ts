@@ -427,17 +427,17 @@ export const useDeleteStaff = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, employmentEndDate }: { id: string; employmentEndDate: string }) => {
       try {
-        await staffService.delete(id)
+        await staffService.archive(id, employmentEndDate)
       } catch (error) {
-        handleError(error, 'Deleting staff member')
+        handleError(error, 'Archiving staff member')
         throw error
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] })
-      handleSuccess('Staff member removed successfully')
+      handleSuccess('Staff member archived')
     }
   })
 }
