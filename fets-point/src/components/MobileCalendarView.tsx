@@ -13,27 +13,45 @@ interface MobileCalendarViewProps {
 
 // Same client color system as desktop for consistency
 const CLIENT_COLORS: Record<string, { bg: string; text: string; dot: string; badge: string; badgeText: string }> = {
-  'PEARSON': { bg: '#EFF6FF', text: '#1D4ED8', dot: '#3B82F6', badge: '#DBEAFE', badgeText: '#1E40AF' },
-  'PSI': { bg: '#F0FDF4', text: '#15803D', dot: '#22C55E', badge: '#DCFCE7', badgeText: '#166534' },
-  'ITTS': { bg: '#FFFBEB', text: '#B45309', dot: '#F59E0B', badge: '#FEF3C7', badgeText: '#92400E' },
-  'PROMETRIC': { bg: '#FFF1F2', text: '#BE123C', dot: '#F43F5E', badge: '#FFE4E6', badgeText: '#9F1239' },
-  'CELPIP': { bg: '#FDF4FF', text: '#9333EA', dot: '#A855F7', badge: '#F3E8FF', badgeText: '#7E22CE' },
-  'CMA': { bg: '#ECFDF5', text: '#047857', dot: '#10B981', badge: '#D1FAE5', badgeText: '#065F46' },
-  'OTHER': { bg: '#F8FAFC', text: '#475569', dot: '#64748B', badge: '#F1F5F9', badgeText: '#334155' },
-};
+  PEARSON: { bg: '#EFF6FF', text: '#1D4ED8', dot: '#3B82F6', badge: '#DBEAFE', badgeText: '#1E40AF' },
+  PSI: { bg: '#FDF2F8', text: '#BE185D', dot: '#E11D48', badge: '#FCE7F3', badgeText: '#9D174D' },
+  ITTS: { bg: '#FFF7ED', text: '#C2410C', dot: '#EA580C', badge: '#FFEDD5', badgeText: '#9A3412' },
+  PROMETRIC: { bg: '#FFFBEB', text: '#A16207', dot: '#D4AF37', badge: '#FEF9C3', badgeText: '#854D0E' },
+  CELPIP: { bg: '#FEF2F2', text: '#B91C1C', dot: '#EF4444', badge: '#FEE2E2', badgeText: '#991B1B' },
+  CMA: { bg: '#ECFDF5', text: '#047857', dot: '#10B981', badge: '#D1FAE5', badgeText: '#065F46' },
+  IELTS: { bg: '#EEF2FF', text: '#4338CA', dot: '#818CF8', badge: '#E0E7FF', badgeText: '#3730A3' },
+  OTHER: { bg: '#F8FAFC', text: '#475569', dot: '#64748B', badge: '#F1F5F9', badgeText: '#334155' },
+}
 
-const normalizeClient = (name: string): string => {
-  const u = name.toUpperCase();
-  if (u.includes('PEARSON') || u.includes('VUE')) return 'PEARSON';
-  if (u.includes('CELPIP')) return 'CELPIP';
-  if (u.includes('CMA')) return 'CMA';
-  if (u.includes('PROMETRIC')) return 'PROMETRIC';
-  if (u.includes('PSI')) return 'PSI';
-  if (u.includes('ITTS')) return 'ITTS';
-  return 'OTHER';
-};
+const resolveExamKind = (s: { client_name?: string; exam_name?: string }) => {
+  const ex = (s.exam_name || '').toUpperCase()
+  const cl = (s.client_name || '').toUpperCase()
+  if (ex.includes('CELPIP') || cl.includes('CELPIP')) return 'CELPIP'
+  if (ex.includes('CMA') || cl.includes('CMA')) return 'CMA'
+  if (ex.includes('PEARSON') || ex.includes('VUE') || cl.includes('PEARSON') || cl.includes('VUE')) return 'PEARSON'
+  if (cl.includes('PROMETRIC') || ex.includes('PROMETRIC')) return 'PROMETRIC'
+  if (cl.includes('PSI') || ex.includes('PSI')) return 'PSI'
+  if (cl.includes('ITTS') || ex.includes('ITTS')) return 'ITTS'
+  if (cl.includes('IELTS') || ex.includes('IELTS')) return 'IELTS'
+  return 'OTHER'
+}
 
-const getClientColor = (name: string) => CLIENT_COLORS[normalizeClient(name)] || CLIENT_COLORS['OTHER'];
+const getBadgeLabel = (s: { client_name?: string; exam_name?: string }) => {
+  const k = resolveExamKind(s)
+  switch (k) {
+    case 'PEARSON': return 'PV'
+    case 'PROMETRIC': return 'PMT'
+    case 'PSI': return 'PSI'
+    case 'ITTS': return 'ITTS'
+    case 'CELPIP': return 'CELPIP'
+    case 'CMA': return 'CMA'
+    case 'IELTS': return 'IELTS'
+    default: return (s.client_name || '—').trim().slice(0, 12)
+  }
+}
+
+const getClientColor = (session: { client_name?: string; exam_name?: string }) =>
+  CLIENT_COLORS[resolveExamKind(session)] || CLIENT_COLORS.OTHER
 
 export function MobileCalendarView({ setActiveTab }: MobileCalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -70,7 +88,9 @@ export function MobileCalendarView({ setActiveTab }: MobileCalendarViewProps) {
 
   const selectedDateSessions = useMemo(() => {
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    return sessions.filter(s => s.date === dateStr);
+    return sessions
+      .filter(s => s.date === dateStr)
+      .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)))
   }, [selectedDate, sessions]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -182,7 +202,7 @@ export function MobileCalendarView({ setActiveTab }: MobileCalendarViewProps) {
               ))
             ) : selectedDateSessions.length > 0 ? (
               selectedDateSessions.map((session: any, i: number) => {
-                const c = getClientColor(session.client_name);
+                const c = getClientColor(session);
                 return (
                   <motion.div
                     key={session.id || i}
@@ -199,10 +219,11 @@ export function MobileCalendarView({ setActiveTab }: MobileCalendarViewProps) {
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             {/* Client badge */}
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold mb-1.5" style={{ backgroundColor: c.badge, color: c.badgeText }}>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold mb-1.5 tracking-wide" style={{ backgroundColor: c.badge, color: c.badgeText }}>
                               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.dot }} />
-                              {session.client_name}
+                              {getBadgeLabel(session)}
                             </span>
+                            <p className="text-[9px] text-slate-400 font-medium truncate mb-0.5">{session.client_name}</p>
                             {/* Exam */}
                             <h4 className="text-sm font-bold text-slate-800 leading-snug truncate">{session.exam_name}</h4>
                           </div>

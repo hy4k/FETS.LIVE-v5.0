@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Calendar, Plus, ChevronLeft, ChevronRight, Edit, Trash2, X, Check,
   Clock, Users, Eye, MapPin, Building, Filter, TrendingUp, Search,
-  Grid3x3, Columns, AlignJustify, Tag, Zap, CheckCircle2, XCircle,
+  Columns, AlignJustify,
   AlertCircle, Loader2, User, ChevronDown, LayoutGrid
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -40,80 +40,123 @@ interface Session {
 
 type CalendarViewMode = 'month' | 'week' | 'day'
 
-// ─── Dark Theme Exam Colors ───────────────────────────────────────────────────
+// ─── Luxury exam palette (distinct, restrained — not all gold) ─────────────
 const EXAM_COLORS: Record<string, {
   bg: string; text: string; border: string; dot: string; badge: string; badgeText: string
 }> = {
-  'PROMETRIC': {
-    bg: 'rgba(246,200,16,0.1)',     text: '#f6c810',
-    border: 'rgba(246,200,16,0.3)', dot: '#f6c810',
-    badge: 'rgba(246,200,16,0.2)',   badgeText: '#f6c810'
+  PROMETRIC: {
+    bg: 'rgba(212, 175, 55, 0.08)', text: '#e8d48b',
+    border: 'rgba(212, 175, 55, 0.28)', dot: '#d4af37',
+    badge: 'rgba(212, 175, 55, 0.14)', badgeText: '#f0e6c8',
   },
-  'PEARSON': {
-    bg: 'rgba(246,200,16,0.1)',    text: '#f6c810',
-    border: 'rgba(246,200,16,0.3)',dot: '#f6c810',
-    badge: 'rgba(246,200,16,0.2)',  badgeText: '#f6c810'
+  PEARSON: {
+    bg: 'rgba(56, 189, 248, 0.07)', text: '#7dd3fc',
+    border: 'rgba(56, 189, 248, 0.25)', dot: '#38bdf8',
+    badge: 'rgba(56, 189, 248, 0.12)', badgeText: '#bae6fd',
   },
-  'PSI': {
-    bg: 'rgba(246,200,16,0.1)',     text: '#f6c810',
-    border: 'rgba(246,200,16,0.3)', dot: '#f6c810',
-    badge: 'rgba(246,200,16,0.2)',   badgeText: '#f6c810'
+  PSI: {
+    bg: 'rgba(190, 24, 93, 0.1)', text: '#f9a8d4',
+    border: 'rgba(190, 24, 93, 0.28)', dot: '#e11d48',
+    badge: 'rgba(190, 24, 93, 0.14)', badgeText: '#fbcfe8',
   },
-  'CELPIP': {
-    bg: 'rgba(246,200,16,0.1)',    text: '#f6c810',
-    border: 'rgba(246,200,16,0.3)',dot: '#f6c810',
-    badge: 'rgba(246,200,16,0.2)', badgeText: '#f6c810'
+  CELPIP: {
+    bg: 'rgba(185, 28, 28, 0.1)', text: '#fca5a5',
+    border: 'rgba(220, 38, 38, 0.28)', dot: '#ef4444',
+    badge: 'rgba(185, 28, 28, 0.12)', badgeText: '#fecaca',
   },
-  'CMA': {
-    bg: 'rgba(246,200,16,0.1)',     text: '#f6c810',
-    border: 'rgba(246,200,16,0.3)', dot: '#f6c810',
-    badge: 'rgba(246,200,16,0.2)',   badgeText: '#f6c810'
+  CMA: {
+    bg: 'rgba(16, 185, 129, 0.08)', text: '#6ee7b7',
+    border: 'rgba(16, 185, 129, 0.28)', dot: '#10b981',
+    badge: 'rgba(16, 185, 129, 0.12)', badgeText: '#a7f3d0',
   },
-  'ITTS': {
-    bg: 'rgba(246,200,16,0.1)',    text: '#f6c810',
-    border: 'rgba(246,200,16,0.3)',dot: '#f6c810',
-    badge: 'rgba(246,200,16,0.2)', badgeText: '#f6c810'
+  ITTS: {
+    bg: 'rgba(234, 88, 12, 0.09)', text: '#fdba74',
+    border: 'rgba(234, 88, 12, 0.28)', dot: '#ea580c',
+    badge: 'rgba(234, 88, 12, 0.12)', badgeText: '#fed7aa',
   },
-  'OTHER': {
-    bg: 'rgba(246,200,16,0.1)',       text: '#f6c810',
-    border: 'rgba(246,200,16,0.3)',  dot: '#f6c810',
-    badge: 'rgba(246,200,16,0.2)',    badgeText: '#f6c810'
+  IELTS: {
+    bg: 'rgba(99, 102, 241, 0.08)', text: '#a5b4fc',
+    border: 'rgba(99, 102, 241, 0.28)', dot: '#818cf8',
+    badge: 'rgba(99, 102, 241, 0.12)', badgeText: '#c7d2fe',
+  },
+  OTHER: {
+    bg: 'rgba(148, 163, 184, 0.08)', text: '#cbd5e1',
+    border: 'rgba(148, 163, 184, 0.22)', dot: '#94a3b8',
+    badge: 'rgba(148, 163, 184, 0.1)', badgeText: '#e2e8f0',
   },
 }
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string; icon: React.ReactNode }> = {
-  'scheduled':   { bg: 'rgba(56,189,248,0.1)',  text: '#38bdf8', label: 'Scheduled',   icon: <Clock size={10} /> },
-  'in_progress': { bg: 'rgba(52,211,153,0.1)',  text: '#34d399', label: 'In Progress', icon: <Zap size={10} /> },
-  'completed':   { bg: 'rgba(255,255,255,0.05)',text: '#9ca3af', label: 'Completed',   icon: <CheckCircle2 size={10} /> },
-  'cancelled':   { bg: 'rgba(251,113,133,0.1)', text: '#fb7185', label: 'Cancelled',   icon: <XCircle size={10} /> },
+type ExamKind = keyof typeof EXAM_COLORS
+
+const KIND_SECTION_LABEL: Record<ExamKind, string> = {
+  PROMETRIC: 'Prometric',
+  PEARSON: 'Pearson Vue (PV)',
+  PSI: 'PSI',
+  CELPIP: 'CELPIP',
+  CMA: 'CMA',
+  ITTS: 'ITTS',
+  IELTS: 'IELTS',
+  OTHER: 'Other',
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const normalizeClientName = (name: string): string => {
-  const u = (name || '').toUpperCase()
-  if (u.includes('PEARSON') || u.includes('VUE')) return 'PEARSON'
-  if (u.includes('CELPIP'))    return 'CELPIP'
-  if (u.includes('CMA'))       return 'CMA'
-  if (u.includes('PROMETRIC')) return 'PROMETRIC'
-  if (u.includes('PSI'))       return 'PSI'
-  if (u.includes('ITTS'))      return 'ITTS'
-  if (u.includes('IELTS'))     return 'IELTS'
+/** Uses exam title + client so CMA / CELPIP / Paragon-hosted exams don’t all read as “Prometric”. */
+const resolveExamKind = (s: Pick<Session, 'client_name' | 'exam_name'>): ExamKind => {
+  const ex = (s.exam_name || '').toUpperCase()
+  const cl = (s.client_name || '').toUpperCase()
+  if (ex.includes('CELPIP') || cl.includes('CELPIP')) return 'CELPIP'
+  if (ex.includes('CMA') || cl.includes('CMA')) return 'CMA'
+  if (ex.includes('PEARSON') || ex.includes('VUE') || cl.includes('PEARSON') || cl.includes('VUE')) return 'PEARSON'
+  if (cl.includes('PROMETRIC') || ex.includes('PROMETRIC')) return 'PROMETRIC'
+  if (cl.includes('PSI') || ex.includes('PSI')) return 'PSI'
+  if (cl.includes('ITTS') || ex.includes('ITTS')) return 'ITTS'
+  if (cl.includes('IELTS') || ex.includes('IELTS')) return 'IELTS'
   return 'OTHER'
 }
 
-const getExamColor = (clientName: string) =>
-  EXAM_COLORS[normalizeClientName(clientName)] ?? EXAM_COLORS['OTHER']
+const groupSessionsByKind = (list: Session[]) => {
+  const order: ExamKind[] = ['PROMETRIC', 'PEARSON', 'PSI', 'CELPIP', 'CMA', 'ITTS', 'IELTS', 'OTHER']
+  const byKind = new Map<ExamKind, Session[]>()
+  order.forEach(k => byKind.set(k, []))
+  list.forEach(s => {
+    const k = resolveExamKind(s)
+    byKind.get(k)!.push(s)
+  })
+  order.forEach(k => {
+    byKind.get(k)!.sort((a, b) => a.start_time.localeCompare(b.start_time))
+  })
+  return order.map(k => ({ kind: k, sessions: byKind.get(k)! })).filter(g => g.sessions.length > 0)
+}
 
-const getShortClient = (name: string) => {
-  const n = (name || '').toUpperCase()
-  if (n.includes('PEARSON') || n.includes('VUE')) return 'PV'
-  if (n.includes('PROMETRIC')) return 'PRO'
-  if (n.includes('PSI'))       return 'PSI'
-  if (n.includes('ITTS'))      return 'ITTS'
-  if (n.includes('CELPIP'))    return 'CEL'
-  if (n.includes('CMA'))       return 'CMA'
-  if (n.includes('IELTS'))     return 'IELTS'
-  return n.slice(0, 4)
+const getExamColor = (kind: ExamKind) => EXAM_COLORS[kind] ?? EXAM_COLORS.OTHER
+
+/** Cell / pill label: PV, PMT (not PRO), full CELPIP, PSI, ITTS, etc. */
+const getClientBadgeLabel = (s: Pick<Session, 'client_name' | 'exam_name'>) => {
+  const k = resolveExamKind(s)
+  switch (k) {
+    case 'PEARSON': return 'PV'
+    case 'PROMETRIC': return 'PMT'
+    case 'PSI': return 'PSI'
+    case 'ITTS': return 'ITTS'
+    case 'CELPIP': return 'CELPIP'
+    case 'CMA': return 'CMA'
+    case 'IELTS': return 'IELTS'
+    default: {
+      const n = (s.client_name || '—').trim()
+      return n.length > 10 ? `${n.slice(0, 9)}…` : n
+    }
+  }
+}
+
+const normalizeClientName = (name: string): ExamKind => {
+  const u = (name || '').toUpperCase()
+  if (u.includes('CELPIP')) return 'CELPIP'
+  if (u.includes('CMA')) return 'CMA'
+  if (u.includes('PEARSON') || u.includes('VUE')) return 'PEARSON'
+  if (u.includes('PROMETRIC')) return 'PROMETRIC'
+  if (u.includes('PSI')) return 'PSI'
+  if (u.includes('ITTS')) return 'ITTS'
+  if (u.includes('IELTS')) return 'IELTS'
+  return 'OTHER'
 }
 
 const formatTime = (time: string) => {
@@ -146,7 +189,6 @@ export function FetsCalendarPremium() {
   // Filter/search state
   const [searchQuery, setSearchQuery] = useState('')
   const [examTypeFilter, setExamTypeFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
   const [showFilters, setShowFilters] = useState(false)
 
   // Modal state
@@ -181,11 +223,10 @@ export function FetsCalendarPremium() {
           String(s.id || '').includes(q)
         if (!match) return false
       }
-      if (examTypeFilter !== 'all' && normalizeClientName(s.client_name) !== examTypeFilter) return false
-      if (statusFilter !== 'all' && (s.status || 'scheduled') !== statusFilter) return false
+      if (examTypeFilter !== 'all' && resolveExamKind(s) !== examTypeFilter) return false
       return true
     })
-  }, [sessions, searchQuery, examTypeFilter, statusFilter])
+  }, [sessions, searchQuery, examTypeFilter])
 
   const getSessionsForDate = useCallback((date: Date) => {
     const dateStr = formatDateForIST(date)
@@ -302,7 +343,7 @@ export function FetsCalendarPremium() {
   const stats = useMemo(() => ({
     total: sessions.reduce((s, x) => s + x.candidate_count, 0),
     totalSessions: sessions.length,
-    uniqueClients: new Set(sessions.map(s => normalizeClientName(s.client_name))).size
+    uniqueClients: new Set(sessions.map(s => resolveExamKind(s))).size
   }), [sessions])
 
   const days = useMemo(() => getDaysInMonth(), [getDaysInMonth])
@@ -313,28 +354,17 @@ export function FetsCalendarPremium() {
   // RENDER HELPERS
   // ─────────────────────────────────────────────────────────────────────────
   const SessionPill = ({ session }: { session: Session }) => {
-    const c = getExamColor(session.client_name)
-    const status = session.status || 'scheduled'
-    const st = STATUS_CONFIG[status] || STATUS_CONFIG['scheduled']
+    const kind = resolveExamKind(session)
+    const c = getExamColor(kind)
     return (
       <div
-        className="flex items-center gap-1 px-1.5 py-[3px] rounded-md border text-[10px] leading-tight transition-all hover:opacity-80 cursor-pointer"
-        style={{ backgroundColor: c.bg, borderColor: c.border, color: c.text }}
+        className="flex items-center gap-1 px-1.5 py-[3px] rounded-md border text-[10px] leading-tight transition-all hover:opacity-90 cursor-pointer shadow-sm"
+        style={{ backgroundColor: c.bg, borderColor: c.border, color: c.badgeText }}
       >
-        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.dot }} />
-        <span className="font-bold truncate flex-1">{getShortClient(session.client_name)}</span>
-        <span className="font-extrabold opacity-80">{session.candidate_count}</span>
+        <span className="w-1.5 h-1.5 rounded-full shrink-0 ring-1 ring-white/10" style={{ backgroundColor: c.dot }} />
+        <span className="font-bold truncate flex-1 tracking-tight">{getClientBadgeLabel(session)}</span>
+        <span className="font-extrabold tabular-nums opacity-90">{session.candidate_count}</span>
       </div>
-    )
-  }
-
-  const StatusBadge = ({ status }: { status?: string }) => {
-    const s = STATUS_CONFIG[status || 'scheduled'] || STATUS_CONFIG['scheduled']
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-        style={{ backgroundColor: s.bg, color: s.text }}>
-        {s.icon} {s.label}
-      </span>
     )
   }
 
@@ -362,14 +392,17 @@ export function FetsCalendarPremium() {
           const total = ds.reduce((s, x) => s + x.candidate_count, 0)
           const isCurrentDay = isToday(date)
           const isWeekend = date.getDay() === 0 || date.getDay() === 6
-          // Group by client
-          const groups: Record<string, { count: number; name: string }> = {}
+          // Group by resolved exam kind (CMA vs CELPIP vs Prometric, etc.)
+          const groups: Record<string, { count: number; kind: ExamKind }> = {}
           ds.forEach(s => {
-            const k = normalizeClientName(s.client_name)
-            if (!groups[k]) groups[k] = { count: 0, name: s.client_name }
+            const k = resolveExamKind(s)
+            if (!groups[k]) groups[k] = { count: 0, kind: k }
             groups[k].count += s.candidate_count
           })
-          const entries = Object.entries(groups)
+          const entries = Object.entries(groups).sort((a, b) => {
+            const order: ExamKind[] = ['PROMETRIC', 'PEARSON', 'PSI', 'CELPIP', 'CMA', 'ITTS', 'IELTS', 'OTHER']
+            return order.indexOf(a[1].kind) - order.indexOf(b[1].kind)
+          })
 
           return (
             <div
@@ -408,13 +441,21 @@ export function FetsCalendarPremium() {
               {/* Session pills */}
               <div className="space-y-1.5">
                 {entries.slice(0, 3).map(([key, stat]) => {
-                  const c = EXAM_COLORS[key] || EXAM_COLORS['OTHER']
+                  const c = getExamColor(stat.kind)
+                  const label =
+                    stat.kind === 'PEARSON' ? 'PV' :
+                    stat.kind === 'PROMETRIC' ? 'PMT' :
+                    stat.kind === 'PSI' ? 'PSI' :
+                    stat.kind === 'ITTS' ? 'ITTS' :
+                    stat.kind === 'CELPIP' ? 'CELPIP' :
+                    stat.kind === 'CMA' ? 'CMA' :
+                    stat.kind === 'IELTS' ? 'IELTS' : 'Other'
                   return (
-                    <div key={key} className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border text-xs leading-tight shadow-sm transition-all hover:brightness-110"
+                    <div key={key} className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border text-[10px] leading-tight shadow-sm transition-all hover:brightness-110"
                       style={{ backgroundColor: c.badge, borderColor: c.border, color: c.badgeText }}>
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_5px_currentColor]" style={{ backgroundColor: c.dot, color: c.dot }} />
-                      <span className="font-bold truncate flex-1 tracking-wide">{getShortClient(stat.name)}</span>
-                      <span className="font-black">{stat.count}</span>
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_6px_currentColor] ring-1 ring-white/10" style={{ backgroundColor: c.dot }} />
+                      <span className="font-bold truncate flex-1 tracking-wide">{label}</span>
+                      <span className="font-black tabular-nums">{stat.count}</span>
                     </div>
                   )
                 })}
@@ -489,17 +530,17 @@ export function FetsCalendarPremium() {
                     onClick={() => canEdit && ds.length === 0 && openModal(d)}
                   >
                     {ds.map(s => {
-                      const c = getExamColor(s.client_name)
+                      const c = getExamColor(resolveExamKind(s))
                       return (
                         <div
                           key={s.id}
                           onClick={e => { e.stopPropagation(); setSelectedDate(d); setShowDetailsModal(true) }}
-                          className="px-2.5 py-2 rounded-lg border text-xs mb-1.5 cursor-pointer hover:brightness-110 transition-all shadow-md"
+                          className="px-2.5 py-2 rounded-lg border text-xs mb-1.5 cursor-pointer hover:brightness-110 transition-all shadow-md backdrop-blur-[2px]"
                           style={{ backgroundColor: c.badge, borderColor: c.border, color: c.badgeText }}
                         >
                           <div className="font-bold flex items-center gap-1.5 tracking-wide">
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_5px_currentColor]" style={{ backgroundColor: c.dot, color: c.dot }} />
-                            {getShortClient(s.client_name)}
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_6px_currentColor] ring-1 ring-white/10" style={{ backgroundColor: c.dot }} />
+                            {getClientBadgeLabel(s)}
                           </div>
                           <div className="text-[10px] opacity-80 mt-1 font-semibold tracking-wider">{formatTime(s.start_time)}</div>
                           <div className="opacity-90 font-black mt-0.5">{s.candidate_count} PAX</div>
@@ -521,8 +562,15 @@ export function FetsCalendarPremium() {
   // ─────────────────────────────────────────────────────────────────────────
   const DayView = () => {
     const dayStr = formatDateForIST(currentDate)
-    const daySessions = filteredSessions.filter(s => s.date === dayStr)
-      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+    const daySessions = filteredSessions
+      .filter(s => s.date === dayStr)
+      .sort((a, b) => {
+        const t = a.start_time.localeCompare(b.start_time)
+        if (t !== 0) return t
+        const k = resolveExamKind(a).localeCompare(resolveExamKind(b))
+        if (k !== 0) return k
+        return (a.exam_name || '').localeCompare(b.exam_name || '')
+      })
     const DAY_HOURS = Array.from({ length: 16 }, (_, i) => i + 6) // 6am–9pm
 
     return (
@@ -567,32 +615,33 @@ export function FetsCalendarPremium() {
               const endMins = timeToMinutes(s.end_time)
               const topOffset = (startMins - 6 * 60) * (70 / 60) // px per hour = 70
               const height = Math.max((endMins - startMins) * (70 / 60), 45)
-              const c = getExamColor(s.client_name)
-              const status = s.status || 'scheduled'
-              const st = STATUS_CONFIG[status] || STATUS_CONFIG['scheduled']
+              const c = getExamColor(resolveExamKind(s))
               return (
                 <motion.div
                   key={s.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="absolute left-3 right-3 rounded-xl border overflow-hidden cursor-pointer hover:brightness-110 transition-all shadow-lg"
+                  className="absolute left-3 right-3 rounded-xl border overflow-hidden cursor-pointer hover:brightness-110 transition-all shadow-lg backdrop-blur-sm"
                   style={{
                     top: `${topOffset}px`,
                     height: `${height}px`,
-                    backgroundColor: c.badge,
+                    background: `linear-gradient(135deg, ${c.badge} 0%, rgba(18,18,20,0.92) 100%)`,
                     borderColor: c.border
                   }}
                   onClick={() => { setSelectedDate(currentDate); setShowDetailsModal(true) }}
                 >
                   {/* Color bar */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl shadow-[0_0_8px_currentColor]" style={{ backgroundColor: c.dot, color: c.dot }} />
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl shadow-[0_0_8px_currentColor]" style={{ backgroundColor: c.dot }} />
                   <div className="pl-5 pr-3 pt-2 h-full flex flex-col">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <span className="text-sm font-black tracking-wide" style={{ color: c.badgeText }}>{s.client_name}</span>
-                        <p className="text-xs mt-0.5 line-clamp-1 font-semibold opacity-80" style={{ color: c.badgeText }}>{s.exam_name}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black tracking-widest uppercase mb-1 border border-white/10"
+                          style={{ color: c.badgeText, backgroundColor: 'rgba(0,0,0,0.25)' }}>
+                          {getClientBadgeLabel(s)}
+                        </span>
+                        <p className="text-[11px] font-semibold text-white/90 line-clamp-2 leading-snug">{s.exam_name}</p>
+                        <p className="text-[9px] text-white/45 mt-0.5 truncate">{s.client_name}</p>
                       </div>
-                      <StatusBadge status={status} />
                     </div>
                     <div className="flex items-center gap-4 mt-auto pb-2">
                       <span className="text-[10px] flex items-center gap-1.5 font-bold tracking-wider opacity-70" style={{ color: c.badgeText }}>
@@ -768,17 +817,7 @@ export function FetsCalendarPremium() {
                           ))}
                         </select>
                       </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Status</label>
-                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                          className="mt-1 w-full px-2 py-1.5 bg-[#0A0A0B] border border-[rgba(255, 255, 255, 0.1)] rounded-lg text-xs text-slate-200 focus:outline-none">
-                          <option value="all">All Status</option>
-                          {Object.entries(STATUS_CONFIG).map(([k, v]) => (
-                            <option key={k} value={k}>{v.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <button onClick={() => { setExamTypeFilter('all'); setStatusFilter('all'); setSearchQuery('') }}
+                      <button onClick={() => { setExamTypeFilter('all'); setSearchQuery('') }}
                         className="w-full py-1.5 text-xs font-bold text-slate-400 hover:text-slate-200 border border-[rgba(255, 255, 255, 0.1)] rounded-lg transition-colors">
                         Clear Filters
                       </button>
@@ -804,7 +843,7 @@ export function FetsCalendarPremium() {
         </div>
 
         {/* ── ACTIVE FILTERS CHIPS ── */}
-        {(searchQuery || examTypeFilter !== 'all' || statusFilter !== 'all') && (
+        {(searchQuery || examTypeFilter !== 'all') && (
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             <span className="text-[11px] text-slate-500 font-medium">Active filters:</span>
             {searchQuery && (
@@ -815,11 +854,6 @@ export function FetsCalendarPremium() {
             {examTypeFilter !== 'all' && (
               <span className="flex items-center gap-1 px-2 py-0.5 bg-[rgba(255, 255, 255, 0.1)] border border-zinc-700 text-slate-200 rounded-full text-[10px] font-bold">
                 {examTypeFilter} <button onClick={() => setExamTypeFilter('all')}><X size={10} /></button>
-              </span>
-            )}
-            {statusFilter !== 'all' && (
-              <span className="flex items-center gap-1 px-2 py-0.5 bg-[rgba(255, 255, 255, 0.1)] border border-zinc-700 text-slate-200 rounded-full text-[10px] font-bold">
-                {STATUS_CONFIG[statusFilter]?.label} <button onClick={() => setStatusFilter('all')}><X size={10} /></button>
               </span>
             )}
           </div>
@@ -863,74 +897,102 @@ export function FetsCalendarPremium() {
                 </button>
               </div>
 
-              {/* Sessions */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-3">
+              {/* Sessions — grouped by client family, sorted by time within each group */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {getSessionsForDate(selectedDate).length > 0 ? (
-                  getSessionsForDate(selectedDate)
-                    .sort((a, b) => a.start_time.localeCompare(b.start_time))
-                    .map((session, idx) => {
-                      const c = getExamColor(session.client_name)
-                      const status = session.status || 'scheduled'
-                      return (
-                        <div key={session.id || idx}
-                          className="rounded-xl border overflow-hidden transition-all hover:border-opacity-80"
-                          style={{ borderColor: c.border, backgroundColor: c.bg }}>
-                          <div className="flex items-stretch">
-                            <div className="w-1.5 shrink-0" style={{ backgroundColor: c.dot }} />
-                            <div className="flex-1 p-4">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold"
-                                      style={{ backgroundColor: c.badge, color: c.badgeText }}>
-                                      {session.client_name}
-                                    </span>
-                                    <StatusBadge status={status} />
-                                  </div>
-                                  <h4 className="text-sm font-bold text-white leading-snug">{session.exam_name}</h4>
-                                  {(session as any).assigned_staff && (
-                                    <p className="text-xs text-slate-300 mt-1 flex items-center gap-1">
-                                      <User size={11} className="text-slate-500" /> {(session as any).assigned_staff}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="text-right shrink-0">
-                                  <div className="text-2xl font-extrabold" style={{ color: c.text }}>
-                                    {session.candidate_count}
-                                  </div>
-                                  <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">candidates</div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/10">
-                                <div className="flex items-center gap-1.5 text-xs text-slate-300">
-                                  <Clock size={12} className="text-[#f6c810]" />
-                                  <span className="font-semibold">{formatTime(session.start_time)} – {formatTime(session.end_time)}</span>
-                                </div>
-                                {session.branch_location && (
-                                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                                    <MapPin size={12} className="text-slate-500" />
-                                    <span className="font-semibold capitalize">{session.branch_location}</span>
-                                  </div>
-                                )}
-                                {canEdit && (
-                                  <div className="ml-auto flex items-center gap-1">
-                                    <button onClick={() => openModal(selectedDate!, session as Session)}
-                                      className="p-1.5 rounded-lg text-slate-500 hover:text-[#f6c810] hover:bg-[#f6c810]/10 transition-colors">
-                                      <Edit size={13} />
-                                    </button>
-                                    <button onClick={() => session.id && handleDelete(session.id)}
-                                      className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors">
-                                      <Trash2 size={13} />
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                  groupSessionsByKind(getSessionsForDate(selectedDate)).map(({ kind, sessions }) => {
+                    const band = getExamColor(kind)
+                    return (
+                      <div key={kind} className="space-y-3">
+                        <div className="flex items-center gap-3 px-0.5">
+                          <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-80" />
+                          <span
+                            className="text-[10px] font-black uppercase tracking-[0.22em] shrink-0 px-3 py-1 rounded-full border"
+                            style={{ color: band.badgeText, borderColor: band.border, backgroundColor: band.badge }}
+                          >
+                            {KIND_SECTION_LABEL[kind]}
+                          </span>
+                          <span className="h-px flex-1 bg-gradient-to-l from-transparent via-white/20 to-transparent opacity-80" />
                         </div>
-                      )
-                    })
+                        <div className="space-y-2.5 pl-1 border-l-2 border-white/[0.06] ml-1.5">
+                          {sessions.map((session, idx) => {
+                            const c = getExamColor(resolveExamKind(session))
+                            return (
+                              <div
+                                key={session.id ?? idx}
+                                className="rounded-xl border overflow-hidden transition-all hover:ring-1 hover:ring-white/10"
+                                style={{ borderColor: c.border, background: `linear-gradient(145deg, ${c.bg} 0%, rgba(10,10,11,0.95) 100%)` }}
+                              >
+                                <div className="flex items-stretch">
+                                  <div className="w-1 shrink-0 rounded-l-xl" style={{ backgroundColor: c.dot }} />
+                                  <div className="flex-1 p-4 min-w-0">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                          <span
+                                            className="px-2.5 py-1 rounded-md text-[10px] font-black tracking-widest uppercase border border-white/10"
+                                            style={{ backgroundColor: c.badge, color: c.badgeText }}
+                                          >
+                                            {getClientBadgeLabel(session)}
+                                          </span>
+                                          <span className="text-[10px] text-slate-500 font-semibold truncate max-w-[200px]">
+                                            {session.client_name}
+                                          </span>
+                                        </div>
+                                        <h4 className="text-sm font-bold text-white leading-snug">{session.exam_name}</h4>
+                                        {(session as any).assigned_staff && (
+                                          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                                            <User size={11} className="text-slate-500" /> {(session as any).assigned_staff}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <div className="text-right shrink-0">
+                                        <div className="text-2xl font-extrabold tabular-nums" style={{ color: c.text }}>
+                                          {session.candidate_count}
+                                        </div>
+                                        <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">candidates</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center flex-wrap gap-3 mt-3 pt-3 border-t border-white/10">
+                                      <div className="flex items-center gap-1.5 text-xs text-slate-300">
+                                        <Clock size={12} style={{ color: c.dot }} />
+                                        <span className="font-semibold tabular-nums">
+                                          {formatTime(session.start_time)} – {formatTime(session.end_time)}
+                                        </span>
+                                      </div>
+                                      {session.branch_location && (
+                                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                          <MapPin size={12} className="text-slate-500" />
+                                          <span className="font-semibold capitalize">{session.branch_location}</span>
+                                        </div>
+                                      )}
+                                      {canEdit && (
+                                        <div className="ml-auto flex items-center gap-1">
+                                          <button
+                                            onClick={() => openModal(selectedDate!, session as Session)}
+                                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#f6c810] hover:bg-[#f6c810]/10 transition-colors"
+                                          >
+                                            <Edit size={13} />
+                                          </button>
+                                          <button
+                                            onClick={() => session.id && handleDelete(session.id)}
+                                            className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                          >
+                                            <Trash2 size={13} />
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })
                 ) : (
                   <div className="flex flex-col items-center justify-center py-16 text-zinc-700">
                     <Calendar size={40} className="mb-3" />
@@ -1042,22 +1104,6 @@ export function FetsCalendarPremium() {
                       <input type="time" value={formData.end_time}
                         onChange={e => setFormData({ ...formData, end_time: e.target.value })}
                         className="w-full px-3 py-2.5 bg-[#0A0A0B] border border-white/10 rounded-lg text-sm font-medium text-zinc-200 focus:ring-1 focus:ring-[#f6c810]/50 focus:border-[#f6c810]/50 outline-none" required />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {Object.entries(STATUS_CONFIG).map(([k, v]) => (
-                        <button key={k} type="button"
-                          onClick={() => setFormData({ ...formData, status: k })}
-                          className={`px-2 py-2 rounded-lg border text-[10px] font-bold flex items-center gap-1 justify-center transition-all
-                            ${formData.status === k
-                              ? 'ring-1 ring-[#f6c810] border-[#f6c810]/50 text-[#f6c810] bg-[#f6c810]/10'
-                              : 'border-white/10 text-slate-400 bg-[#0A0A0B] hover:border-white/20'}`}>
-                          {v.icon} {v.label}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 </div>
