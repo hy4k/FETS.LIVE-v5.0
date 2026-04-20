@@ -1,0 +1,67 @@
+[
+  {
+    "id": "apr-24-1000-g",
+    "date": "2026-04-24",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 3,
+    "capacity": 10
+  },
+  {
+    "id": "apr-24-1400-g",
+    "date": "2026-04-24",
+    "time": "14:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "apr-25-1000-g",
+    "date": "2026-04-25",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "apr-26-1000-g",
+    "date": "2026-04-26",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "apr-29-1400-g",
+    "date": "2026-04-29",
+    "time": "14:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "may-01-1000-g",
+    "date": "2026-05-01",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "may-02-1000-g",
+    "date": "2026-05-02",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "meta-attendees",
+    "date": "2026-04-24",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 3,
+    "capacity": 10,
+    "notes": "Visible attendee names in portal panel: Abhirami S Nair, Mithun NR, Nimmy M"
+  }
+]

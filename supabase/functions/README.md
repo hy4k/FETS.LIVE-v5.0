@@ -13,6 +13,7 @@ API endpoints for external integrations with FETS.Live (FETS AI broadcasting, mo
 ```bash
 cd supabase
 supabase functions deploy fets-api --no-verify-jwt
+supabase functions deploy paragon-schedule-sync --no-verify-jwt
 ```
 
 ### Set Secrets (API Keys)
@@ -22,6 +23,60 @@ supabase secrets set FETS_API_KEYS="fets-ai-2026-secure-key,another-key-if-neede
 
 # Verify secrets are set
 supabase secrets list
+```
+
+### Paragon schedule sync (hourly)
+
+This repo includes `paragon-schedule-sync`, which writes slot-level **counts** (no candidate PII) into Postgres via `public.apply_paragon_snapshot(...)`.
+
+**1) Apply DB migration**
+
+Run your normal migration workflow so these objects exist:
+
+- `public.paragon_celpip_bookings`
+- `public.paragon_schedule_sync_runs`
+- `public.apply_paragon_snapshot(jsonb)`
+- `cron.schedule(...)` job named `paragon-schedule-sync-hourly`
+
+**2) Enable extensions (Dashboard)**
+
+Enable:
+
+- `pg_cron`
+- `pg_net`
+
+**3) Create Vault secrets (SQL editor)**
+
+Follow the Supabase guide: `https://supabase.com/docs/guides/functions/schedule-functions.md`
+
+Minimum secrets used by the migration job:
+
+- `project_url` → `https://<project-ref>.supabase.co`
+- `anon_key` → your Supabase anon key (or a dedicated restricted key)
+- `paragon_sync_secret` → a random shared secret
+
+**4) Set function secret**
+
+The Edge Function validates `x-paragon-sync-secret` against:
+
+```bash
+supabase secrets set PARAGON_SYNC_SECRET="same-value-as-paragon_sync_secret-vault-secret"
+```
+
+**5) Manual smoke test**
+
+```bash
+curl -X POST "https://qqewusetilxxfvfkmsed.supabase.co/functions/v1/paragon-schedule-sync" ^
+  -H "Authorization: Bearer <anon_key>" ^
+  -H "x-paragon-sync-secret: <PARAGON_SYNC_SECRET>" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"mode\":\"sync\",\"location\":\"cochin\",\"startMonth\":\"2026-04\",\"endMonth\":\"2026-06\"}"
+
+curl -X POST "https://qqewusetilxxfvfkmsed.supabase.co/functions/v1/paragon-schedule-sync" ^
+  -H "Authorization: Bearer <anon_key>" ^
+  -H "x-paragon-sync-secret: <PARAGON_SYNC_SECRET>" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"mode\":\"sync\",\"location\":\"calicut\",\"startMonth\":\"2026-04\",\"endMonth\":\"2026-06\"}"
 ```
 
 ## 📡 API Endpoints

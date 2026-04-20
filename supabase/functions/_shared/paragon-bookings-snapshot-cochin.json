@@ -1,0 +1,106 @@
+[
+  {
+    "id": "cochin-2026-04-23-10-00",
+    "date": "2026-04-23",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 3,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-04-23-14-00",
+    "date": "2026-04-23",
+    "time": "14:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-04-24-10-00",
+    "date": "2026-04-24",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 2,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-04-25-10-00",
+    "date": "2026-04-25",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-04-28-14-00",
+    "date": "2026-04-28",
+    "time": "14:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-05-02-10-00",
+    "date": "2026-05-02",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-05-03-10-00",
+    "date": "2026-05-03",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-05-09-14-00",
+    "date": "2026-05-09",
+    "time": "14:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-05-10-10-00",
+    "date": "2026-05-10",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-05-11-10-00",
+    "date": "2026-05-11",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-05-16-14-00",
+    "date": "2026-05-16",
+    "time": "14:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 10
+  },
+  {
+    "id": "cochin-2026-05-21-14-00",
+    "date": "2026-05-21",
+    "time": "14:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 5
+  },
+  {
+    "id": "cochin-2026-05-23-10-00",
+    "date": "2026-05-23",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 1,
+    "capacity": 5
+  }
+]

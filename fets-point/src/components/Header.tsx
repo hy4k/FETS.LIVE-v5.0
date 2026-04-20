@@ -104,6 +104,7 @@ export function Header({ isMobile = false, sidebarOpen = false, setSidebarOpen, 
   const topNavItems = [
     { id: 'command-center', label: 'LIVE', icon: LayoutDashboard },
     { id: 'fets-calendar', label: 'CALENDAR', icon: CalendarDays },
+    { id: 'fets-calendar-demo', label: 'CAL DEMO', icon: CalendarDays },
     { id: 'fets-roster', label: 'ROSTER', icon: UserCheck },
   ];
 

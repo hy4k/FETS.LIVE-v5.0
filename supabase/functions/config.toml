@@ -6,3 +6,6 @@ verify_jwt = false
 
 [create-staff-user]
 verify_jwt = false
+
+[paragon-schedule-sync]
+verify_jwt = false

@@ -16,6 +16,7 @@ import {
 } from '../utils/dateUtils'
 import { validateSessionCapacity } from '../utils/sessionUtils'
 import { useCalendarSessions, useSessionMutations } from '../hooks/useCalendarSessions'
+import { useParagonCelpipBookings } from '../hooks/useParagonCelpipBookings'
 import { useClients, useClientExams } from '../hooks/useClients'
 import { toast } from 'react-hot-toast'
 import { LocationSelectorThread } from './LocationSelectorThread'
@@ -39,6 +40,18 @@ interface Session {
 }
 
 type CalendarViewMode = 'month' | 'week' | 'day'
+
+type CalendarWorkspaceMode = 'main' | 'client'
+type ClientWorkspaceTab = 'CELPIP' | 'CMA_US' | 'PEARSON_VUE'
+
+const stableNegativeId = (input: string) => {
+  let h = 0
+  for (let i = 0; i < input.length; i += 1) {
+    h = (h * 31 + input.charCodeAt(i)) | 0
+  }
+  const n = Math.abs(h) % 900_000_000
+  return -(n + 1)
+}
 
 // ─── Luxury exam palette (distinct, restrained — not all gold) ─────────────
 const EXAM_COLORS: Record<string, {
@@ -197,6 +210,9 @@ export function FetsCalendarPremium() {
   const [showAnalysis, setShowAnalysis] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
 
+  const [workspaceMode, setWorkspaceMode] = useState<CalendarWorkspaceMode>('main')
+  const [clientTab, setClientTab] = useState<ClientWorkspaceTab>('CELPIP')
+
   const [formData, setFormData] = useState({
     client_name: '', exam_name: '', date: '',
     candidate_count: 1, start_time: '09:00', end_time: '17:00', status: 'scheduled'
@@ -204,6 +220,11 @@ export function FetsCalendarPremium() {
 
   const { data: sessions = [], isLoading: loading, isError, error } = useCalendarSessions(
     currentDate, activeBranch, applyFilter, isGlobalView
+  )
+  const paragonBookingsQuery = useParagonCelpipBookings(
+    workspaceMode === 'client' && clientTab === 'CELPIP' && (isGlobalView || activeBranch !== 'global'),
+    isGlobalView,
+    activeBranch
   )
   const { data: dbClients = [] } = useClients()
   const { data: dbExams = [] } = useClientExams()
@@ -213,9 +234,66 @@ export function FetsCalendarPremium() {
     if (isError) toast.error(`Failed to load sessions: ${(error as Error).message}`)
   }, [isError, error])
 
+  useEffect(() => {
+    if (paragonBookingsQuery.isError) {
+      toast.error(`Paragon schedule sync read failed: ${(paragonBookingsQuery.error as Error).message}`)
+    }
+  }, [paragonBookingsQuery.isError, paragonBookingsQuery.error])
+
   // ── Computed ──────────────────────────────────────────────────────────────
+  const matchesClientTab = (s: Session, tab: ClientWorkspaceTab) => {
+    const kind = resolveExamKind(s)
+    if (tab === 'CELPIP') return kind === 'CELPIP'
+    if (tab === 'CMA_US') return kind === 'CMA'
+    if (tab === 'PEARSON_VUE') return kind === 'PEARSON'
+    return false
+  }
+
+  const clientScopedSessions = useMemo(() => {
+    if (workspaceMode !== 'client') return sessions
+    return sessions.filter(s => matchesClientTab(s, clientTab))
+  }, [sessions, workspaceMode, clientTab])
+
+  const paragonOverlaySessions = useMemo((): Session[] => {
+    if (!user) return []
+    if (workspaceMode !== 'client' || clientTab !== 'CELPIP') return []
+
+    const monthPrefix = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
+
+    return (paragonBookingsQuery.data ?? [])
+      .filter(b => String(b.exam_date).slice(0, 10).startsWith(monthPrefix))
+      .map((b) => {
+        const start = b.start_time
+        const [hh, mm] = start.split(':').map(Number)
+        const endHour = (hh + 3) % 24
+        const end_time = `${String(endHour).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+
+        const branch = b.branch_location
+        const date = String(b.exam_date).slice(0, 10)
+        const idKey = `${branch}|${b.slot_key}|${date}|${start}`
+
+        return {
+          id: stableNegativeId(idKey),
+          date,
+          start_time: start,
+          end_time,
+          client_name: 'CELPIP',
+          exam_name: `Paragon portal (${branch}) — ${b.test_type || 'G'}`,
+          candidate_count: b.booked_count,
+          user_id: user.id,
+          branch_location: branch,
+          status: 'scheduled',
+        } satisfies Session
+      })
+  }, [user, workspaceMode, clientTab, currentDate, paragonBookingsQuery.data])
+
+  const mergedSessions = useMemo(() => {
+    if (workspaceMode !== 'client' || clientTab !== 'CELPIP') return clientScopedSessions
+    return [...clientScopedSessions, ...paragonOverlaySessions]
+  }, [workspaceMode, clientTab, clientScopedSessions, paragonOverlaySessions])
+
   const filteredSessions = useMemo(() => {
-    return sessions.filter(s => {
+    return mergedSessions.filter(s => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
         const match = s.client_name.toLowerCase().includes(q) ||
@@ -226,7 +304,7 @@ export function FetsCalendarPremium() {
       if (examTypeFilter !== 'all' && resolveExamKind(s) !== examTypeFilter) return false
       return true
     })
-  }, [sessions, searchQuery, examTypeFilter])
+  }, [mergedSessions, searchQuery, examTypeFilter])
 
   const getSessionsForDate = useCallback((date: Date) => {
     const dateStr = formatDateForIST(date)
@@ -235,8 +313,8 @@ export function FetsCalendarPremium() {
 
   const getAllSessionsForDate = useCallback((date: Date) => {
     const dateStr = formatDateForIST(date)
-    return sessions.filter(s => s.date === dateStr)
-  }, [sessions])
+    return mergedSessions.filter(s => s.date === dateStr)
+  }, [mergedSessions])
 
   // ── Month navigation ──────────────────────────────────────────────────────
   const getDaysInMonth = useCallback(() => {
@@ -288,6 +366,10 @@ export function FetsCalendarPremium() {
   // ── Modals ────────────────────────────────────────────────────────────────
   const openModal = (date?: Date, session?: Session) => {
     if (session) {
+      if (typeof session.id === 'number' && session.id < 0) {
+        toast.error('This slot is synced from Paragon and cannot be edited in FETS.')
+        return
+      }
       setEditingSession(session)
       setFormData({
         client_name: session.client_name, exam_name: session.exam_name,
@@ -318,6 +400,10 @@ export function FetsCalendarPremium() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+    if (editingSession?.id !== undefined && editingSession.id < 0) {
+      toast.error('This slot is synced from Paragon and cannot be edited in FETS.')
+      return
+    }
     const cap = validateSessionCapacity(formData.candidate_count, activeBranch)
     if (!cap.isValid) { toast.error(cap.error!); return }
     if (cap.warning) toast(cap.warning, { icon: '⚠️' })
@@ -331,20 +417,24 @@ export function FetsCalendarPremium() {
   }
 
   const handleDelete = async (id: number) => {
+    if (id < 0) {
+      toast.error('This slot is synced from Paragon and cannot be deleted in FETS.')
+      return
+    }
     if (!confirm('Delete this session?')) return
     await deleteSession(id)
     if (selectedDate) {
-      const rem = sessions.filter(s => s.date === formatDateForIST(selectedDate) && s.id !== id)
+      const rem = mergedSessions.filter(s => s.date === formatDateForIST(selectedDate) && s.id !== id)
       if (rem.length === 0) setShowDetailsModal(false)
     }
   }
 
   // ── Stats ─────────────────────────────────────────────────────────────────
   const stats = useMemo(() => ({
-    total: sessions.reduce((s, x) => s + x.candidate_count, 0),
-    totalSessions: sessions.length,
-    uniqueClients: new Set(sessions.map(s => resolveExamKind(s))).size
-  }), [sessions])
+    total: mergedSessions.reduce((s, x) => s + x.candidate_count, 0),
+    totalSessions: mergedSessions.length,
+    uniqueClients: new Set(mergedSessions.map(s => resolveExamKind(s))).size
+  }), [mergedSessions])
 
   const days = useMemo(() => getDaysInMonth(), [getDaysInMonth])
   const isToday = (d: Date | null) => d ? isTodayIST(d) : false
@@ -669,7 +759,7 @@ export function FetsCalendarPremium() {
   // ─────────────────────────────────────────────────────────────────────────
   // LOADING STATE
   // ─────────────────────────────────────────────────────────────────────────
-  if (loading) return (
+  if (loading || (workspaceMode === 'client' && clientTab === 'CELPIP' && paragonBookingsQuery.isLoading)) return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#121214] to-[#0A0A0B]">
       <div className="bg-[#121214] p-8 rounded-2xl border border-[rgba(255, 255, 255, 0.1)] flex flex-col items-center gap-4 shadow-2xl">
         <div className="relative w-10 h-10">
@@ -730,6 +820,45 @@ export function FetsCalendarPremium() {
         {/* ── TOOLBAR ── */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5 bg-[#121214] rounded-xl border border-[rgba(255, 255, 255, 0.1)] px-4 py-3">
           <div className="flex items-center gap-3 flex-wrap">
+            {/* Workspace toggle */}
+            <div className="flex items-center bg-[#0A0A0B] rounded-lg border border-[rgba(255, 255, 255, 0.1)] p-0.5">
+              {([
+                { mode: 'main' as CalendarWorkspaceMode, label: 'Main' },
+                { mode: 'client' as CalendarWorkspaceMode, label: 'Client-wise' },
+              ]).map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  onClick={() => setWorkspaceMode(mode)}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${workspaceMode === mode
+                    ? 'bg-[#f6c810] text-black shadow'
+                    : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Client tabs */}
+            {workspaceMode === 'client' && (
+              <div className="flex items-center bg-[#0A0A0B] rounded-lg border border-[rgba(255, 255, 255, 0.1)] p-0.5">
+                {([
+                  { tab: 'CELPIP' as ClientWorkspaceTab, label: 'CELPIP' },
+                  { tab: 'CMA_US' as ClientWorkspaceTab, label: 'CMA US' },
+                  { tab: 'PEARSON_VUE' as ClientWorkspaceTab, label: 'Pearson Vue' },
+                ]).map(({ tab, label }) => (
+                  <button
+                    key={tab}
+                    onClick={() => setClientTab(tab)}
+                    className={`px-3 py-2 rounded-lg text-xs font-black tracking-wide transition-all ${clientTab === tab
+                      ? 'bg-white/10 text-[#f6c810] border border-[#f6c810]/30'
+                      : 'text-slate-400 hover:text-slate-200'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* View Mode Toggle */}
             <div className="flex items-center bg-[#0A0A0B] rounded-lg border border-[rgba(255, 255, 255, 0.1)] p-0.5">
               {([
@@ -859,6 +988,14 @@ export function FetsCalendarPremium() {
           </div>
         )}
 
+        {workspaceMode === 'client' && clientTab !== 'CELPIP' && (
+          <div className="mb-4 rounded-xl border border-white/10 bg-[#0A0A0B] px-4 py-3 text-xs text-slate-300">
+            <span className="font-black text-[#f6c810] uppercase tracking-widest mr-2">Note</span>
+            Paragon hourly sync overlays are enabled for <span className="font-black text-white">CELPIP</span> only right now.
+            This tab shows your existing FETS sessions filtered for <span className="font-black text-white">{clientTab.replace('_', ' ')}</span>.
+          </div>
+        )}
+
         {/* ── CALENDAR VIEWS ── */}
         {viewMode === 'month' && <MonthView />}
         {viewMode === 'week' && <WeekView />}
@@ -967,7 +1104,7 @@ export function FetsCalendarPremium() {
                                           <span className="font-semibold capitalize">{session.branch_location}</span>
                                         </div>
                                       )}
-                                      {canEdit && (
+                                      {canEdit && (session.id === undefined || session.id >= 0) && (
                                         <div className="ml-auto flex items-center gap-1">
                                           <button
                                             onClick={() => openModal(selectedDate!, session as Session)}
@@ -976,7 +1113,7 @@ export function FetsCalendarPremium() {
                                             <Edit size={13} />
                                           </button>
                                           <button
-                                            onClick={() => session.id && handleDelete(session.id)}
+                                            onClick={() => typeof session.id === 'number' && handleDelete(session.id)}
                                             className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                                           >
                                             <Trash2 size={13} />

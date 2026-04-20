@@ -54,6 +54,7 @@ const FetsVault = lazy(() => import('./components/FetsVault').then(module => ({ 
 const FetsIntelligence = lazy(() => import('./components/FetsIntelligence').then(module => ({ default: module.FetsIntelligence })))
 const FetsRoster = lazy(() => import('./components/FetsRosterPremium'))
 const FetsCalendar = lazy(() => import('./components/FetsCalendarPremium').then(module => ({ default: module.FetsCalendarPremium })))
+const FetsCalendarDemo = lazy(() => import('./components/FetsCalendarDemo').then(module => ({ default: module.FetsCalendarDemo })))
 const SystemManager = lazy(() => import('./components/SystemManager').then(module => ({ default: module.default })))
 
 const NewsManager = lazy(() => import('./components/NewsManager').then(module => ({ default: module.NewsManager })))
@@ -110,6 +111,7 @@ function AppContent() {
     if (isMobile) {
       if (activeTab === 'command-center') return <MobileHome setActiveTab={setActiveTab} profile={profile} />;
       if (activeTab === 'fets-calendar') return <MobileCalendar />;
+      if (activeTab === 'fets-calendar-demo') return <FetsCalendarDemo />;
       if (activeTab === 'candidate-tracker') return <MobileRegister />;
       if (activeTab === 'my-desk') return <MobileMyDesk setActiveTab={setActiveTab} />;
       if (activeTab === 'fets-intelligence') return <MobileAiChat />;
@@ -131,6 +133,7 @@ function AppContent() {
       'candidate-tracker': { component: <CandidateTracker />, name: 'Candidate Tracker' },
       'fets-roster': { component: <FetsRoster />, name: 'FETS Roster' },
       'fets-calendar': { component: <FetsCalendar />, name: 'FETS Calendar' },
+      'fets-calendar-demo': { component: <FetsCalendarDemo />, name: 'FETS Calendar Demo' },
       'my-desk': { component: <MyDesk onNavigate={setActiveTab} />, name: 'My Desk' },
       'staff-management': { component: <StaffManagement />, name: 'Staff Management' },
       'fets-intelligence': { component: <FetsIntelligence initialQuery={aiQuery} />, name: 'FETS Intelligence' },
