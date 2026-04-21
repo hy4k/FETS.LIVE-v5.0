@@ -79,6 +79,30 @@ curl -X POST "https://qqewusetilxxfvfkmsed.supabase.co/functions/v1/paragon-sche
   -d "{\"mode\":\"sync\",\"location\":\"calicut\",\"startMonth\":\"2026-04\",\"endMonth\":\"2026-06\"}"
 ```
 
+### Live Paragon parity (Apr–Jun, both centres)
+
+**Important:** `mode: "sync"` applies whatever is in the **bundled JSON files** in this repo (`_shared/paragon-bookings-snapshot-*.json`). That is **not** the live Paragon website. Hourly cron therefore keeps FETS in sync with those files, not with every portal change.
+
+To match **real** Paragon whenever it changes:
+
+1. Run a small **external automation** (recommended: Playwright on Azure / GitHub Actions / your VM) that logs into each centre, reads the schedule for **April–June 2026**, and builds a `bookings` array (counts only — same shape as the bundled JSON rows: `id`, `date`, `time`, `testType`, `bookedCount`, `capacity`).
+2. POST it to the Edge Function with **`mode: "ingest"`** (same auth headers as `sync`). That writes through `apply_paragon_snapshot` for the given `location` (`cochin` or `calicut`).
+3. Run that job on your chosen cadence (e.g. hourly after Paragon updates, or every 15 minutes).
+
+Example (`curl` — body is the full `bookings` array your job extracted for that centre and range):
+
+```bash
+curl -X POST "https://qqewusetilxxfvfkmsed.supabase.co/functions/v1/paragon-schedule-sync" \
+  -H "Authorization: Bearer <anon_key>" \
+  -H "x-paragon-sync-secret: <PARAGON_SYNC_SECRET>" \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"ingest","location":"calicut","startMonth":"2026-04","endMonth":"2026-06","bookings":[{"id":"calicut-2026-04-23-10-00","date":"2026-04-23","time":"10:00","testType":"G","bookedCount":3,"capacity":10}]}'
+```
+
+Build `bookings` in your automation to include **every** April–June row Paragon shows (Cochin and Calicut each get their own POST with `location` set accordingly).
+
+Optional later: point **pg_cron** at `ingest` by calling your automation’s HTTPS endpoint, or keep cron on `sync` as a fallback and run **ingest** from the scraper only.
+
 ## 📡 API Endpoints
 
 **Base URL:** `https://qqewusetilxxfvfkmsed.supabase.co/functions/v1/fets-api`

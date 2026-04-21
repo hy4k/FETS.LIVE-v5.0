@@ -16,6 +16,30 @@
     "capacity": 10
   },
   {
+    "id": "calicut-2026-04-23-10-00",
+    "date": "2026-04-23",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 3,
+    "capacity": 10
+  },
+  {
+    "id": "calicut-2026-04-26-10-00",
+    "date": "2026-04-26",
+    "time": "10:00",
+    "testType": "G",
+    "bookedCount": 2,
+    "capacity": 10
+  },
+  {
+    "id": "calicut-2026-04-30-14-00",
+    "date": "2026-04-30",
+    "time": "14:00",
+    "testType": "G",
+    "bookedCount": 4,
+    "capacity": 10
+  },
+  {
     "id": "calicut-2026-05-04-10-00",
     "date": "2026-05-04",
     "time": "10:00",

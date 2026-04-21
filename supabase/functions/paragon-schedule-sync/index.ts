@@ -11,6 +11,12 @@
  * Cron (outline): schedule POST to
  *   https://<project-ref>.supabase.co/functions/v1/paragon-schedule-sync
  * with Authorization: Bearer <anon or service role> per Supabase docs, plus x-paragon-sync-secret.
+ *
+ * Modes:
+ * - read: JSON preview from bundled snapshot (no DB write).
+ * - sync: DB apply from bundled snapshot (used by pg_cron today).
+ * - ingest: DB apply from request body `bookings` (live Paragon extract). Use this when an external
+ *   job (Playwright, etc.) pulls the portal and POSTs counts — then FETS.LIVE matches Paragon for Apr–Jun.
  */
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
@@ -23,6 +29,162 @@ import {
   type ParagonBookingSlot,
   type ParagonCentre,
 } from '../_shared/paragonBookings.ts'
+
+type SlotShape = {
+  slot_key: string
+  exam_date: string
+  start_time: string
+  test_type: string
+  booked_count: number
+  capacity: number
+}
+
+type SnapshotDiff = {
+  addedSlots: number
+  updatedSlots: number
+  removedSlots: number
+  bookingDelta: number
+  totalBookedBefore: number
+  totalBookedAfter: number
+}
+
+function toSlotShapeFromPortal(rows: ParagonBookingSlot[]): SlotShape[] {
+  return rows.map((r) => ({
+    slot_key: r.id,
+    exam_date: r.date,
+    start_time: r.time,
+    test_type: r.testType ?? 'G',
+    booked_count: Number(r.bookedCount ?? 0),
+    capacity: Number(r.capacity ?? 0),
+  }))
+}
+
+/** Live push: same row shape as bundled JSON / read API (counts only, no PII). */
+function parseIngestBookings(raw: unknown): ParagonBookingSlot[] | null {
+  if (!Array.isArray(raw) || raw.length === 0) return null
+  const out: ParagonBookingSlot[] = []
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') return null
+    const o = row as Record<string, unknown>
+    const id = typeof o.id === 'string' ? o.id : null
+    const date = typeof o.date === 'string' ? o.date : null
+    const time = typeof o.time === 'string' ? o.time : null
+    const testType =
+      typeof o.testType === 'string'
+        ? o.testType
+        : typeof o.test_type === 'string'
+          ? o.test_type
+          : 'G'
+    const bc =
+      typeof o.bookedCount === 'number'
+        ? o.bookedCount
+        : typeof o.booked_count === 'number'
+          ? o.booked_count
+          : NaN
+    const cap = typeof o.capacity === 'number' ? o.capacity : 10
+    if (!id || !date || !time || Number.isNaN(bc)) return null
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
+    out.push({
+      id,
+      date,
+      time,
+      testType,
+      bookedCount: Math.max(0, Math.floor(bc)),
+      capacity: Math.max(0, Math.floor(cap)),
+    })
+  }
+  return out
+}
+
+function computeSnapshotDiff(previousRows: SlotShape[], nextRows: SlotShape[]): SnapshotDiff {
+  const prevMap = new Map(previousRows.map((row) => [row.slot_key, row]))
+  const nextMap = new Map(nextRows.map((row) => [row.slot_key, row]))
+
+  let addedSlots = 0
+  let updatedSlots = 0
+  let removedSlots = 0
+  let bookingDelta = 0
+
+  for (const [slotKey, nextRow] of nextMap.entries()) {
+    const prevRow = prevMap.get(slotKey)
+    if (!prevRow) {
+      addedSlots += 1
+      bookingDelta += nextRow.booked_count
+      continue
+    }
+
+    const changed =
+      prevRow.exam_date !== nextRow.exam_date ||
+      prevRow.start_time !== nextRow.start_time ||
+      prevRow.test_type !== nextRow.test_type ||
+      prevRow.booked_count !== nextRow.booked_count ||
+      prevRow.capacity !== nextRow.capacity
+
+    if (changed) {
+      updatedSlots += 1
+    }
+
+    if (prevRow.booked_count !== nextRow.booked_count) {
+      bookingDelta += nextRow.booked_count - prevRow.booked_count
+    }
+  }
+
+  for (const [slotKey, prevRow] of prevMap.entries()) {
+    if (!nextMap.has(slotKey)) {
+      removedSlots += 1
+      bookingDelta -= prevRow.booked_count
+    }
+  }
+
+  const totalBookedBefore = previousRows.reduce((sum, row) => sum + row.booked_count, 0)
+  const totalBookedAfter = nextRows.reduce((sum, row) => sum + row.booked_count, 0)
+
+  return {
+    addedSlots,
+    updatedSlots,
+    removedSlots,
+    bookingDelta,
+    totalBookedBefore,
+    totalBookedAfter,
+  }
+}
+
+function buildSyncSummaryMessage(diff: SnapshotDiff): string {
+  const delta = diff.bookingDelta >= 0 ? `+${diff.bookingDelta}` : `${diff.bookingDelta}`
+  return [
+    'apply_paragon_snapshot ok',
+    `slots +${diff.addedSlots} ~${diff.updatedSlots} -${diff.removedSlots}`,
+    `bookings delta ${delta}`,
+    `booked total ${diff.totalBookedAfter}`,
+  ].join(' | ')
+}
+
+function computeDayBookingDeltas(prev: SlotShape[], next: SlotShape[]): { date: string; change: number }[] {
+  const map = new Map<string, number>()
+  const prevKey = new Map(prev.map((r) => [r.slot_key, r]))
+  const nextKey = new Map(next.map((r) => [r.slot_key, r]))
+
+  for (const [, nRow] of nextKey) {
+    const pRow = prevKey.get(nRow.slot_key)
+    const d = String(nRow.exam_date).slice(0, 10)
+    if (!pRow) {
+      map.set(d, (map.get(d) ?? 0) + nRow.booked_count)
+    } else if (pRow.booked_count !== nRow.booked_count) {
+      map.set(d, (map.get(d) ?? 0) + (nRow.booked_count - pRow.booked_count))
+    }
+  }
+  for (const [, pRow] of prevKey) {
+    if (!nextKey.has(pRow.slot_key)) {
+      const d = String(pRow.exam_date).slice(0, 10)
+      map.set(d, (map.get(d) ?? 0) - pRow.booked_count)
+    }
+  }
+
+  return Array.from(map.entries())
+    .filter(([, c]) => c !== 0)
+    .map(([date, change]) => ({ date, change }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
 
 function unauthorized() {
   return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
@@ -147,8 +309,36 @@ serve(async (req: Request) => {
   const mode = typeof body.mode === 'string' ? body.mode : 'read'
   const location = parseLocation(url, body)
 
-  const all: ParagonBookingSlot[] = getParagonBookingSnapshotForLocation(location)
-  const bookings = filterBookingsByMonthRange(all, startMonth, endMonth)
+  let bookings: ParagonBookingSlot[]
+  let bookingSource: 'bundled_snapshot' | 'live_ingest' = 'bundled_snapshot'
+
+  if (mode === 'ingest') {
+    const ingested = parseIngestBookings(body.bookings)
+    if (!ingested) {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error:
+            'Invalid ingest body: bookings must be a non-empty JSON array of { id, date, time, testType?, bookedCount, capacity? }',
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+    bookings = filterBookingsByMonthRange(ingested, startMonth, endMonth)
+    bookingSource = 'live_ingest'
+    if (bookings.length === 0) {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error: 'After month filter, no bookings remained. Check startMonth/endMonth and each row date.',
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+  } else {
+    const all: ParagonBookingSlot[] = getParagonBookingSnapshotForLocation(location)
+    bookings = filterBookingsByMonthRange(all, startMonth, endMonth)
+  }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -159,7 +349,7 @@ serve(async (req: Request) => {
         })
       : null
 
-  if (mode === 'sync') {
+  if (mode === 'sync' || mode === 'ingest') {
     try {
       if (bookings.length === 0) {
         const msg = 'No bookings returned for requested range/location; refusing DB apply to avoid wiping last good snapshot.'
@@ -185,15 +375,53 @@ serve(async (req: Request) => {
         )
       }
 
+      let syncSummaryMessage = 'apply_paragon_snapshot ok'
+      let syncDetails: Record<string, unknown> | null = null
+      const nextShapes = toSlotShapeFromPortal(bookings)
+
+      if (admin) {
+        const { data: previousRows, error: previousRowsError } = await admin
+          .from('paragon_celpip_bookings')
+          .select('slot_key,exam_date,start_time,test_type,booked_count,capacity')
+          .eq('branch_location', location)
+
+        const prevShapes = (!previousRowsError ? (previousRows ?? []) : []) as SlotShape[]
+        const diff = computeSnapshotDiff(prevShapes, nextShapes)
+        syncSummaryMessage = buildSyncSummaryMessage(diff)
+        const dayDeltas = computeDayBookingDeltas(prevShapes, nextShapes)
+        syncDetails = {
+          total_candidates_after: diff.totalBookedAfter,
+          additional_candidates_since_last_update: diff.bookingDelta,
+          test_days_with_changes: dayDeltas,
+          data_source: bookingSource,
+        }
+      }
+
       await applySnapshotToDatabase(location, bookings)
       if (admin) {
         await admin.from('paragon_schedule_sync_runs').insert({
           branch_location: location,
           ok: true,
-          message: 'apply_paragon_snapshot ok',
+          message: syncSummaryMessage,
           slot_count: bookings.length,
-        })
+          ...(syncDetails ? { sync_details: syncDetails } : {}),
+        } as any)
       }
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          mode,
+          source: bookingSource === 'live_ingest' ? 'paragon-live-ingest' : 'paragon-test-centre-portal',
+          generatedAt: new Date().toISOString(),
+          range: { startMonth, endMonth },
+          location,
+          slotCount: bookings.length,
+          summary: syncSummaryMessage,
+          syncDetails,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       if (admin) {

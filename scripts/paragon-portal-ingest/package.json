@@ -1,0 +1,14 @@
+{
+  "name": "paragon-portal-ingest",
+  "private": true,
+  "type": "module",
+  "description": "Playwright job: log into Paragon test centre portal per location, extract Apr–Jun booking counts, POST to Supabase paragon-schedule-sync (mode=ingest). Secrets via .env only — never commit .env.",
+  "scripts": {
+    "start": "node run.mjs",
+    "install:browsers": "playwright install chromium"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "playwright": "^1.50.0"
+  }
+}

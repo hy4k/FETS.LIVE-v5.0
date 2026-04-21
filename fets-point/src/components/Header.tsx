@@ -104,7 +104,7 @@ export function Header({ isMobile = false, sidebarOpen = false, setSidebarOpen, 
   const topNavItems = [
     { id: 'command-center', label: 'LIVE', icon: LayoutDashboard },
     { id: 'fets-calendar', label: 'CALENDAR', icon: CalendarDays },
-    { id: 'fets-calendar-demo', label: 'CAL DEMO', icon: CalendarDays },
+    { id: 'fets-calendar-demo', label: 'CELPIP', icon: CalendarDays },
     { id: 'fets-roster', label: 'ROSTER', icon: UserCheck },
   ];
 
@@ -372,8 +372,8 @@ export function Header({ isMobile = false, sidebarOpen = false, setSidebarOpen, 
   return (
     <>
       <div className="relative z-40 fets-command-deck transition-all duration-300 w-full border-b border-white/5">
-        {/* --- ROW 1: CORE MODULES (The Command Deck) --- */}
-        <div className="max-w-[1920px] mx-auto px-4 md:px-8 h-24 relative z-20 flex items-center justify-between gap-4 md:gap-8">
+        {/* --- ROW 1: CORE MODULES (The Command Deck) — taller for breathing room --- */}
+        <div className="max-w-[1920px] mx-auto px-4 md:px-8 min-h-[7.5rem] md:min-h-[9.5rem] py-4 md:py-5 relative z-20 flex items-center justify-between gap-4 md:gap-8">
 
           {/* LEFT: Branding */}
           <div className="flex items-center gap-4 md:gap-6 shrink-0 w-64">
@@ -390,13 +390,13 @@ export function Header({ isMobile = false, sidebarOpen = false, setSidebarOpen, 
           {/* CENTER: CORE NAVIGATION */}
           <div className="hidden lg:flex flex-1 justify-center items-center">
             <div className="flex items-center">
-              <div className="text-[#FACC15] font-black text-6xl mr-4 leading-none tracking-tighter">F</div>
-              <div className="flex flex-col gap-2 border-l-4 border-[#FACC15]/30 pl-4 py-1">
+              <div className="text-[#FACC15] font-black text-7xl md:text-8xl mr-5 md:mr-6 leading-none tracking-tighter">F</div>
+              <div className="flex flex-col gap-3 md:gap-3.5 border-l-4 border-[#FACC15]/30 pl-5 md:pl-6 py-2">
                 {topNavItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab && setActiveTab(item.id)}
-                    className={`text-left text-sm font-black tracking-[0.25em] transition-colors flex items-center gap-3 ${activeTab === item.id ? 'text-[#FACC15]' : 'text-white/60 hover:text-white'}`}
+                    className={`text-left text-base md:text-lg font-black tracking-[0.22em] transition-colors flex items-center gap-3 py-0.5 ${activeTab === item.id ? 'text-[#FACC15]' : 'text-white/60 hover:text-white'}`}
                   >
                     {item.label}
                   </button>

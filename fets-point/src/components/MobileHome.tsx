@@ -12,7 +12,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useBranch } from '../hooks/useBranch';
 import { useAppModules } from '../hooks/useAppModules';
-import { useDashboardStats } from '../hooks/useCommandCentre';
+import { useDashboardStats, useUpcomingSchedule, useSevenDayRosterStaff } from '../hooks/useCommandCentre';
+import { SevenDayExamOutlook } from './SevenDayExamOutlook';
 import { canSwitchBranches, formatBranchName, getAvailableBranches } from '../utils/authUtils';
 import { useAuth } from '../hooks/useAuth';
 import { format } from 'date-fns';
@@ -26,6 +27,8 @@ export function MobileHome({ setActiveTab, profile }: MobileHomeProps) {
   const { activeBranch, setActiveBranch } = useBranch();
   const { modules, toggleModule, isUpdating } = useAppModules();
   const { data: dashboardData } = useDashboardStats();
+  const { data: examSchedule = [], isLoading: isLoadingSchedule } = useUpcomingSchedule();
+  const { data: staffByDate = {}, isLoading: isLoadingRosterStaff } = useSevenDayRosterStaff();
   const [showBranchPicker, setShowBranchPicker] = useState(false);
   const [showManagementSheet, setShowManagementSheet] = useState(false);
   const [staffPresent, setStaffPresent] = useState<any[]>([]);
@@ -100,7 +103,7 @@ export function MobileHome({ setActiveTab, profile }: MobileHomeProps) {
   });
 
   return (
-    <div className="flex flex-col min-h-screen sovereign-theme pb-32">
+    <div className="flex flex-col min-h-screen sovereign-theme pb-[calc(8rem+env(safe-area-inset-bottom,0px))] touch-manipulation">
 
       {/* ═══════════════════════════════════════════════════════
           HERO HEADER — Matches Web's FETS LIVE sovereign style
@@ -217,6 +220,24 @@ export function MobileHome({ setActiveTab, profile }: MobileHomeProps) {
             </motion.div>
           ))}
         </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════
+          SAME 7-DAY OUTLOOK AS DESKTOP COMMAND CENTRE
+      ═══════════════════════════════════════════════════════ */}
+      <div className="px-4 sm:px-6 mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-[1px] w-4 bg-[#FACC15]/30" />
+          <span className="text-[10px] sm:text-xs font-bold text-[#FACC15]/70 uppercase tracking-[0.22em]">Schedule</span>
+          <div className="h-[1px] flex-1 bg-white/5" />
+        </div>
+        <SevenDayExamOutlook
+          sessions={examSchedule as any}
+          isLoading={isLoadingSchedule}
+          activeBranch={activeBranch}
+          staffByDate={staffByDate}
+          staffLoading={isLoadingRosterStaff}
+        />
       </div>
 
       {/* ═══════════════════════════════════════════════════════

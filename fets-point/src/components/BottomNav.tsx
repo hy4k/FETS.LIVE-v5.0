@@ -23,7 +23,7 @@ export function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
   const navItems = [
     { id: 'command-center', label: 'Home', icon: LayoutDashboard },
     { id: 'fets-calendar', label: 'Calendar', icon: CalendarDays },
-    { id: 'fets-calendar-demo', label: 'Demo', icon: CalendarDays },
+    { id: 'fets-calendar-demo', label: 'CELPIP', icon: CalendarDays },
     { id: 'incident-log', label: 'Cases', icon: AlertCircle },
     { id: 'fets-intelligence', label: 'AI', icon: Brain },
   ].filter(item => {

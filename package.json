@@ -6,7 +6,8 @@
     "dev": "pnpm --filter fets-point dev",
     "build": "pnpm --filter fets-point build",
     "lint": "pnpm --filter fets-point lint",
-    "start": "pnpm --filter fets-point preview"
+    "start": "pnpm --filter fets-point preview",
+    "paragon:ingest": "node scripts/paragon-portal-ingest/run.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

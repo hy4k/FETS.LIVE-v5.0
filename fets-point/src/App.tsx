@@ -133,7 +133,7 @@ function AppContent() {
       'candidate-tracker': { component: <CandidateTracker />, name: 'Candidate Tracker' },
       'fets-roster': { component: <FetsRoster />, name: 'FETS Roster' },
       'fets-calendar': { component: <FetsCalendar />, name: 'FETS Calendar' },
-      'fets-calendar-demo': { component: <FetsCalendarDemo />, name: 'FETS Calendar Demo' },
+      'fets-calendar-demo': { component: <FetsCalendarDemo />, name: 'CELPIP Calendar' },
       'my-desk': { component: <MyDesk onNavigate={setActiveTab} />, name: 'My Desk' },
       'staff-management': { component: <StaffManagement />, name: 'Staff Management' },
       'fets-intelligence': { component: <FetsIntelligence initialQuery={aiQuery} />, name: 'FETS Intelligence' },
