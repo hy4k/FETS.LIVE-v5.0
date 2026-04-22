@@ -4,7 +4,17 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const packageRoot = path.join(__dirname, '..')
-dotenv.config({ path: path.join(packageRoot, '.env') })
+const repoRoot = path.resolve(packageRoot, '..', '..')
+
+const dotenvPaths = [
+  path.join(packageRoot, '.env'),
+  path.join(repoRoot, '.env'),
+  path.join(repoRoot, 'env'),
+]
+
+for (const p of dotenvPaths) {
+  dotenv.config({ path: p, override: false })
+}
 
 function req(name) {
   const v = process.env[name]

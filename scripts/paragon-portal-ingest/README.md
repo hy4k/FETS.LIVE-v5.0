@@ -18,11 +18,51 @@ cp .env.example .env
 pnpm start
 ```
 
-## What you must fill in
+## Azure VM (recommended for always-on)
 
-1. **`lib/selectors.mjs`** — replace `TODO_*` strings with real locators (prefer `page.getByRole` in `login.mjs` / `extractSchedule.mjs` once you know labels).
-2. **`lib/extractSchedule.mjs`** — navigate to the schedule view and map DOM (or captured API JSON) into `{ id, date, time, testType, bookedCount, capacity }[]` for Apr–Jun 2026.
-3. **`lib/login.mjs`** — adjust post-login wait if the portal redirects slowly.
+Use this on your Azure Linux VM so runs continue even when your local PC is off.
+
+1) Ensure repo + env are present on VM:
+
+```bash
+cd /path/to/FETS.LIVE-v5.0
+cp env scripts/paragon-portal-ingest/.env
+```
+
+2) Run one-time systemd setup (as root):
+
+```bash
+cd /path/to/FETS.LIVE-v5.0
+sudo bash scripts/paragon-portal-ingest/setup-azure-vm-systemd.sh <vm-username>
+```
+
+This creates:
+
+- `fets-paragon-ingest.service` (oneshot ingest run)
+- `fets-paragon-ingest.timer` (hourly trigger + run on boot + catch-up after downtime)
+
+3) Verify:
+
+```bash
+systemctl status fets-paragon-ingest.timer --no-pager
+systemctl status fets-paragon-ingest.service --no-pager
+journalctl -u fets-paragon-ingest.service -n 100 --no-pager
+```
+
+## Daily health-check (under 2 minutes)
+
+Run these from the VM:
+
+```bash
+cd /path/to/FETS.LIVE-v5.0
+bash scripts/paragon-portal-ingest/check-hourly-health.sh
+systemctl list-timers --all | grep fets-paragon-ingest.timer
+journalctl -u fets-paragon-ingest.service -n 40 --no-pager
+```
+
+If the second command prints `OK: ... healthy`, hourly automation is working from the VM side.
+
+## Implementation notes
 
 Recording tip:
 

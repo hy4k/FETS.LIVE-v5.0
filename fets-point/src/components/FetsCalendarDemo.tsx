@@ -83,16 +83,12 @@ export function FetsCalendarDemo() {
   const [monthIndex, setMonthIndex] = useState(0)
 
   const currentMonth = MONTHS[monthIndex]
+  const currentMonthPrefix = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`
   const days = useMemo(() => getDaysInMonthGrid(currentMonth), [currentMonth])
   const bookingsQuery = useParagonCelpipBookings(true, activeBranch === 'global', activeBranch)
   const syncRunsQuery = useParagonSyncRuns(true, activeBranch === 'global', activeBranch)
   const sessions = bookingsQuery.data ?? []
   const syncRuns = syncRunsQuery.data ?? []
-
-  const totalCandidatesNow = useMemo(
-    () => sessions.reduce((sum, row) => sum + row.booked_count, 0),
-    [sessions],
-  )
 
   const sessionsByDate = useMemo(() => {
     const map = new Map<string, typeof sessions>()
@@ -104,12 +100,16 @@ export function FetsCalendarDemo() {
     return map
   }, [sessions])
 
-  const currentMonthTotal = useMemo(() => {
-    const monthPrefix = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`
-    return sessions
-      .filter(session => String(session.exam_date).startsWith(monthPrefix))
-      .reduce((sum, session) => sum + session.booked_count, 0)
-  }, [currentMonth, sessions])
+  const currentMonthSessions = useMemo(
+    () => sessions.filter(session => String(session.exam_date).startsWith(currentMonthPrefix)),
+    [sessions, currentMonthPrefix],
+  )
+
+  const currentMonthTotal = useMemo(
+    () => currentMonthSessions.reduce((sum, session) => sum + session.booked_count, 0),
+    [currentMonthSessions],
+  )
+  const currentMonthSlotCount = currentMonthSessions.length
 
   const latestRun = useMemo(() => syncRuns[0] ?? null, [syncRuns])
 
@@ -128,23 +128,24 @@ export function FetsCalendarDemo() {
   const details = useMemo(() => normalizeSyncDetails(latestRun), [latestRun])
   const fallback = useMemo(() => parseFallbackFromMessage(latestRun?.message ?? null), [latestRun?.message])
 
-  const totalAtLastUpdate = details?.total_candidates_after ?? fallback.bookedTotal
-  const changeSinceLastRefresh =
-    details?.additional_candidates_since_last_update ?? fallback.bookingDelta
-
   const daysChanged = details?.test_days_with_changes ?? []
+  const daysChangedThisMonth = useMemo(
+    () => daysChanged.filter((row) => row.date.startsWith(currentMonthPrefix)),
+    [daysChanged, currentMonthPrefix],
+  )
+  const monthChangeSinceRefresh = useMemo(
+    () => daysChangedThisMonth.reduce((sum, row) => sum + Number(row.change || 0), 0),
+    [daysChangedThisMonth],
+  )
 
-  const changeLine = () => {
-    if (changeSinceLastRefresh === undefined || Number.isNaN(changeSinceLastRefresh)) {
-      return '—'
+  const monthChangeLine = () => {
+    if (monthChangeSinceRefresh === 0) {
+      return 'No change in this month since previous refresh.'
     }
-    if (changeSinceLastRefresh === 0) {
-      return 'No change in candidate numbers since the previous update.'
+    if (monthChangeSinceRefresh > 0) {
+      return `+${monthChangeSinceRefresh} candidates in this month vs previous refresh.`
     }
-    if (changeSinceLastRefresh > 0) {
-      return `${changeSinceLastRefresh} more candidate${changeSinceLastRefresh === 1 ? '' : 's'} booked since the previous update.`
-    }
-    return `${Math.abs(changeSinceLastRefresh)} fewer candidate${changeSinceLastRefresh === -1 ? '' : 's'} since the previous update.`
+    return `${monthChangeSinceRefresh} candidates in this month vs previous refresh.`
   }
 
   return (
@@ -208,13 +209,13 @@ export function FetsCalendarDemo() {
           />
         </div>
 
-        {/* Update summary — plain language */}
-        <section className="mb-8 rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-sm p-6 md:p-8 shadow-xl shadow-black/20">
+        {/* Update summary — month-scoped plain language */}
+        <section className="mb-8 rounded-2xl border border-zinc-700/80 bg-[#181923] p-6 md:p-8 shadow-xl shadow-black/25">
           <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">Latest update</h2>
-              <p className="text-sm md:text-base text-zinc-400 mt-1">
-                What changed since the last time the schedule was refreshed from the test centre.
+              <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">Latest update for {formatMonthTitle(currentMonth)}</h2>
+              <p className="text-sm md:text-base text-zinc-300 mt-1">
+                Easy view: how many candidates and sessions are in this month, and what changed after the latest refresh.
               </p>
             </div>
             {latestRun?.created_at && (
@@ -240,33 +241,34 @@ export function FetsCalendarDemo() {
 
           {latestRun && latestRun.ok && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-xl border border-white/10 bg-black/25 p-5 md:p-6">
-                <p className="text-sm font-semibold text-zinc-400 uppercase tracking-wide mb-2">At last update</p>
+              <div className="rounded-xl border border-sky-400/20 bg-sky-500/10 p-5 md:p-6">
+                <p className="text-sm font-semibold text-sky-200 uppercase tracking-wide mb-2">Candidates in this month</p>
                 <p className="text-3xl md:text-4xl font-black tabular-nums text-white">
-                  {totalAtLastUpdate ?? '—'}
+                  {currentMonthTotal}
                 </p>
-                <p className="text-sm text-zinc-400 mt-2">Total candidates (all listed test times)</p>
+                <p className="text-sm text-zinc-300 mt-2">Booked candidates visible in {formatMonthTitle(currentMonth)}</p>
               </div>
-              <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-5 md:p-6">
-                <p className="text-sm font-semibold text-amber-200/90 uppercase tracking-wide mb-2">Since previous update</p>
-                <p className="text-base md:text-lg text-zinc-100 leading-snug">{changeLine()}</p>
+              <div className="rounded-xl border border-violet-400/25 bg-violet-500/10 p-5 md:p-6">
+                <p className="text-sm font-semibold text-violet-200 uppercase tracking-wide mb-2">Sessions in this month</p>
+                <p className="text-3xl md:text-4xl font-black tabular-nums text-white">{currentMonthSlotCount}</p>
+                <p className="text-sm text-zinc-300 mt-2">Total time slots currently listed for this month</p>
               </div>
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5 md:p-6 md:col-span-2 lg:col-span-1">
-                <p className="text-sm font-semibold text-zinc-400 uppercase tracking-wide mb-2">Right now</p>
-                <p className="text-3xl md:text-4xl font-black tabular-nums text-emerald-300">{totalCandidatesNow}</p>
-                <p className="text-sm text-zinc-400 mt-2">Total candidates in this view (live)</p>
+              <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-5 md:p-6 md:col-span-2 lg:col-span-1">
+                <p className="text-sm font-semibold text-emerald-200 uppercase tracking-wide mb-2">Change in this month</p>
+                <p className="text-base md:text-lg text-zinc-100 leading-snug">{monthChangeLine()}</p>
+                <p className="text-sm text-zinc-300 mt-2">Compared with the refresh just before this one</p>
               </div>
             </div>
           )}
 
-          {latestRun && latestRun.ok && daysChanged.length > 0 && (
+          {latestRun && latestRun.ok && daysChangedThisMonth.length > 0 && (
             <div className="mt-6 pt-6 border-t border-white/10">
               <p className="text-sm font-semibold text-zinc-300 mb-3 flex items-center gap-2">
                 <Info size={18} className="text-amber-400/90 shrink-0" />
-                Test days where candidate numbers moved in the last refresh
+                Days in {formatMonthTitle(currentMonth)} where numbers changed in the latest refresh
               </p>
               <ul className="flex flex-wrap gap-2.5">
-                {daysChanged.map((row) => (
+                {daysChangedThisMonth.map((row) => (
                   <li
                     key={row.date}
                     className="px-4 py-2 rounded-lg bg-white/[0.07] border border-white/10 text-sm md:text-base text-zinc-100"
@@ -282,9 +284,15 @@ export function FetsCalendarDemo() {
             </div>
           )}
 
-          {latestRun && latestRun.ok && daysChanged.length === 0 && changeSinceLastRefresh === 0 && (
+          {latestRun && latestRun.ok && currentMonthSlotCount === 0 && (
+            <p className="mt-6 text-sm text-zinc-300 border-t border-white/10 pt-5">
+              No CELPIP slots are currently listed for {formatMonthTitle(currentMonth)}.
+            </p>
+          )}
+
+          {latestRun && latestRun.ok && currentMonthSlotCount > 0 && daysChangedThisMonth.length === 0 && monthChangeSinceRefresh === 0 && (
             <p className="mt-6 text-sm text-zinc-500 border-t border-white/10 pt-5">
-              No test days had a change in candidate numbers in the last refresh.
+              No day in this month had a count change in the latest refresh.
             </p>
           )}
         </section>
@@ -294,14 +302,22 @@ export function FetsCalendarDemo() {
             {latestByBranch.map((run) => {
               const d = normalizeSyncDetails(run) ?? ({} as ParagonSyncDetails)
               const fb = parseFallbackFromMessage(run.message)
-              const total = d.total_candidates_after ?? fb.bookedTotal
-              const delta = d.additional_candidates_since_last_update ?? fb.bookingDelta
+              const total = sessions
+                .filter((s) => s.branch_location === run.branch_location && String(s.exam_date).startsWith(currentMonthPrefix))
+                .reduce((sum, s) => sum + s.booked_count, 0)
+              const slotCount = sessions.filter(
+                (s) => s.branch_location === run.branch_location && String(s.exam_date).startsWith(currentMonthPrefix),
+              ).length
+              const monthDeltaFromDetails = (d.test_days_with_changes ?? [])
+                .filter((row) => row.date.startsWith(currentMonthPrefix))
+                .reduce((sum, row) => sum + Number(row.change || 0), 0)
+              const delta = Number.isFinite(monthDeltaFromDetails) ? monthDeltaFromDetails : fb.bookingDelta
               const deltaText =
                 delta === 0
-                  ? 'No change since previous update'
+                  ? 'No month-level change since previous update'
                   : delta > 0
-                    ? `+${delta} candidates vs previous update`
-                    : `${delta} candidates vs previous update`
+                    ? `+${delta} candidates in this month`
+                    : `${delta} candidates in this month`
               return (
                 <div
                   key={`${run.branch_location}-${run.id}`}
@@ -311,7 +327,8 @@ export function FetsCalendarDemo() {
                   <p className="text-sm text-zinc-500 mt-1">
                     {new Date(run.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                   </p>
-                  <p className="text-2xl font-black text-white mt-3 tabular-nums">{total ?? '—'} total</p>
+                  <p className="text-2xl font-black text-white mt-3 tabular-nums">{total} candidates</p>
+                  <p className="text-sm text-zinc-400 mt-1">{slotCount} sessions in {formatMonthTitle(currentMonth)}</p>
                   <p className="text-base text-zinc-300 mt-2">{deltaText}</p>
                 </div>
               )

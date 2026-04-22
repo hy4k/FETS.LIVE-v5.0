@@ -13,8 +13,8 @@ export const SELECTORS = {
 
   /** Optional: use if home → Schedule flow changes; extractSchedule.mjs uses the Schedule link directly */
   nav: {
-    openScheduleMenu: 'TODO_OPEN_SCHEDULE_MENU',
-    scheduleLink: 'TODO_SCHEDULE_OR_BOOKINGS_LINK',
+    openScheduleMenu: 'a[href*="schedule" i],button:has-text("Schedule")',
+    scheduleLink: 'a[href*="schedule" i],a:has-text("Schedule"),button:has-text("Schedule")',
   },
 
   /**
@@ -22,14 +22,14 @@ export const SELECTORS = {
    * Prefer scoping all row queries under this root.
    */
   schedule: {
-    root: 'TODO_SCHEDULE_ROOT',
+    root: 'main, .content-wrapper, [role="main"], .container-fluid',
     /** One locator per exam row (relative to root), or use getByRole loops in extractSchedule.mjs */
-    row: 'TODO_EACH_SESSION_ROW',
+    row: 'tbody tr, [role="row"], .k-master-row, .mat-row',
     /** Optional: date cell within a row */
-    dateCell: 'TODO_DATE_WITHIN_ROW',
-    timeCell: 'TODO_TIME_WITHIN_ROW',
-    bookedCountCell: 'TODO_BOOKED_COUNT_WITHIN_ROW',
-    capacityCell: 'TODO_CAPACITY_WITHIN_ROW',
-    testTypeCell: 'TODO_TEST_TYPE_WITHIN_ROW',
+    dateCell: 'td:nth-child(1), [data-col*="date" i]',
+    timeCell: 'td:nth-child(2), [data-col*="time" i]',
+    bookedCountCell: 'td:has-text("/"), [data-col*="booked" i]',
+    capacityCell: 'td:has-text("/"), [data-col*="capacity" i]',
+    testTypeCell: 'td:has-text("CELPIP"), [data-col*="test" i]',
   },
 }
