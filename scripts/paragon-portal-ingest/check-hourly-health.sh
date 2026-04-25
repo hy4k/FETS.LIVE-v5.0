@@ -39,17 +39,17 @@ if [[ "${service_active}" == "failed" ]]; then
   exit 2
 fi
 
-last_finish_us="$(systemctl show "${SERVICE_NAME}" -p ExecMainExitTimestampUSec --value || true)"
+last_finish="$(systemctl show "${SERVICE_NAME}" -p ExecMainExitTimestamp --value || true)"
 last_code="$(systemctl show "${SERVICE_NAME}" -p ExecMainStatus --value || true)"
 result="$(systemctl show "${SERVICE_NAME}" -p Result --value || true)"
 
-if [[ -z "${last_finish_us}" || "${last_finish_us}" == "0" ]]; then
+if [[ -z "${last_finish}" || "${last_finish}" == "n/a" ]]; then
   echo "ERROR: ${SERVICE_NAME} has no completed run yet."
   exit 2
 fi
 
 now_s="$(date +%s)"
-last_s="$(( last_finish_us / 1000000 ))"
+last_s="$(date -d "${last_finish}" +%s)"
 age_minutes="$(( (now_s - last_s) / 60 ))"
 
 if (( age_minutes > MAX_AGE_MINUTES )); then
