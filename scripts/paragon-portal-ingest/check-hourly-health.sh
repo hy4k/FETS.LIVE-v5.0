@@ -5,12 +5,15 @@ SERVICE_NAME="${1:-fets-paragon-ingest.service}"
 TIMER_NAME="${2:-fets-paragon-ingest.timer}"
 MAX_AGE_MINUTES="${MAX_AGE_MINUTES:-125}"
 
-if ! systemctl list-unit-files --type=service --no-legend | awk '{print $1}' | grep -Fxq "${SERVICE_NAME}"; then
+service_load_state="$(systemctl show "${SERVICE_NAME}" -p LoadState --value 2>/dev/null || true)"
+timer_load_state="$(systemctl show "${TIMER_NAME}" -p LoadState --value 2>/dev/null || true)"
+
+if [[ "${service_load_state}" != "loaded" ]]; then
   echo "ERROR: service ${SERVICE_NAME} is not installed."
   exit 2
 fi
 
-if ! systemctl list-unit-files --type=timer --no-legend | awk '{print $1}' | grep -Fxq "${TIMER_NAME}"; then
+if [[ "${timer_load_state}" != "loaded" ]]; then
   echo "ERROR: timer ${TIMER_NAME} is not installed."
   exit 2
 fi
