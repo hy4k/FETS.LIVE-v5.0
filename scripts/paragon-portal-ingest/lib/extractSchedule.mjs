@@ -568,11 +568,109 @@ async function stepSchedulerMonth(page, direction, timeoutMs) {
 }
 
 /**
+ * Kendo's month navigation can update the toolbar before events finish repainting.
+ * Set the scheduler date directly when the widget is available, then wait for the
+ * rendered month label before reading events.
+ *
+ * @param {import('playwright').Page} page
+ * @param {number} targetKey
+ * @param {number} timeoutMs
+ */
+async function setSchedulerMonth(page, targetKey, timeoutMs) {
+  const { year, month } = keyToYearMonth(targetKey)
+  const changed = await page
+    .evaluate(({ y, m }) => {
+      const schedulerEl = document.querySelector('#scheduler')
+      const maybeJquery = globalThis.jQuery ?? globalThis.$
+      const scheduler =
+        maybeJquery && schedulerEl
+          ? maybeJquery(schedulerEl).data('kendoScheduler')
+          : undefined
+
+      if (!scheduler || typeof scheduler.date !== 'function') {
+        return false
+      }
+
+      scheduler.date(new Date(y, m - 1, 1))
+      if (typeof scheduler.view === 'function' && scheduler.view()?.name !== 'month') {
+        scheduler.view('month')
+      }
+      return true
+    }, { y: year, m: month })
+    .catch(() => false)
+
+  if (!changed) return false
+
+  await page
+    .waitForFunction(
+      ({ target }) => {
+        const label =
+          document.querySelector('#scheduler .k-nav-current .k-lg-date-format')?.textContent ??
+          document.querySelector('#scheduler .k-nav-current .k-sm-date-format')?.textContent ??
+          ''
+        const m = label.match(
+          /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b[^0-9]*(20\d{2})/i,
+        )
+        if (!m) return false
+        const months = {
+          january: 1,
+          february: 2,
+          march: 3,
+          april: 4,
+          may: 5,
+          june: 6,
+          july: 7,
+          august: 8,
+          september: 9,
+          october: 10,
+          november: 11,
+          december: 12,
+        }
+        const month = months[m[1].toLowerCase()]
+        const key = Number(m[2]) * 12 + (month - 1)
+        return key === target
+      },
+      { target: targetKey },
+      { timeout: timeoutMs },
+    )
+    .catch(() => {})
+
+  await waitForSchedulerSettled(page, timeoutMs)
+  return (await getCurrentSchedulerMonthKey(page)) === targetKey
+}
+
+/**
+ * @param {import('playwright').Page} page
+ * @param {number} timeoutMs
+ */
+async function waitForSchedulerSettled(page, timeoutMs) {
+  await page.waitForLoadState('domcontentloaded').catch(() => {})
+  await page.waitForLoadState('networkidle', { timeout: Math.min(timeoutMs, 10_000) }).catch(() => {})
+  await page
+    .waitForFunction(
+      () => {
+        const scheduler = document.querySelector('#scheduler')
+        if (!scheduler) return false
+        if (scheduler.querySelector('.k-loading-mask, .k-loading-image, .k-loading-color')) return false
+        return Boolean(scheduler.querySelector('.k-scheduler-content table.k-scheduler-table tbody tr[role="row"]'))
+      },
+      undefined,
+      { timeout: Math.min(timeoutMs, 15_000) },
+    )
+    .catch(() => {})
+  await sleep(1_200)
+}
+
+/**
  * @param {import('playwright').Page} page
  * @param {number} targetKey
  * @param {number} timeoutMs
  */
 async function goToSchedulerMonth(page, targetKey, timeoutMs) {
+  if (await setSchedulerMonth(page, targetKey, timeoutMs)) {
+    return true
+  }
+
   let current = await getCurrentSchedulerMonthKey(page)
   if (current === null) return false
 
@@ -605,7 +703,13 @@ async function collectKendoBookingsAcrossRange(page, startMonth, endMonth, timeo
     const moved = await goToSchedulerMonth(page, mk, timeoutMs)
     if (!moved) continue
 
-    const monthRows = await parseKendoBookings(page, startMonth, endMonth, mk)
+    let monthRows = []
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      await waitForSchedulerSettled(page, timeoutMs)
+      monthRows = await parseKendoBookings(page, startMonth, endMonth, mk)
+      if (monthRows.length > 0) break
+      await sleep(1_000 * attempt)
+    }
     for (const row of monthRows) {
       merged.set(row.id, row)
     }
