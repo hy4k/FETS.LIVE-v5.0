@@ -12,6 +12,7 @@ import {
   Eye,
   EyeOff,
   ExternalLink,
+  Crown,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
@@ -45,6 +46,7 @@ export type QuickAccessItemRow = {
   label: string | null
   sort_order: number
   source_vault_row_id: string | null
+  is_global?: boolean
   created_at: string
   updated_at: string
 }
@@ -140,7 +142,7 @@ export function QuickAccessSection({
   profile,
   authUserId,
 }: {
-  profile: { id: string } | null | undefined
+  profile: { id: string; email?: string | null; role?: string | null } | null | undefined
   authUserId?: string | null
 }) {
   const [items, setItems] = useState<QuickAccessItemRow[]>([])
@@ -154,13 +156,16 @@ export function QuickAccessSection({
   const [addFieldType, setAddFieldType] = useState<QuickAccessFieldType>('other')
   const [addValue, setAddValue] = useState('')
   const [addLabel, setAddLabel] = useState('')
+  const [addShareGlobally, setAddShareGlobally] = useState(false)
   const [showAddPanel, setShowAddPanel] = useState(false)
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [editLabel, setEditLabel] = useState('')
   const [editFieldType, setEditFieldType] = useState<QuickAccessFieldType>('other')
+  const [editShareGlobally, setEditShareGlobally] = useState(false)
   const [revealedIds, setRevealedIds] = useState<Record<string, boolean>>({})
+  const isMithun = profile?.email?.toLowerCase() === 'mithun@fets.in' && profile?.role === 'super_admin'
 
   const fetchItems = useCallback(async () => {
     if (!profile?.id) {
@@ -187,7 +192,10 @@ export function QuickAccessSection({
       return
     }
     setTableMissing(false)
-    setItems((data || []) as QuickAccessItemRow[])
+    const visibleRows = ((data || []) as QuickAccessItemRow[]).filter(
+      (row) => row.is_global || row.owner_id === profile.id
+    )
+    setItems(visibleRows)
     setLoading(false)
   }, [profile?.id])
 
@@ -233,7 +241,7 @@ export function QuickAccessSection({
           const s = String(val).trim()
           if (!s) return
           toInsert.push({
-            owner_id: v.user_id,
+            owner_id: profile.id,
             client_slug: client,
             field_type,
             value_text: s,
@@ -300,6 +308,7 @@ export function QuickAccessSection({
     setAddFieldType('other')
     setAddValue('')
     setAddLabel('')
+    setAddShareGlobally(false)
     setShowAddPanel(false)
   }
 
@@ -319,6 +328,7 @@ export function QuickAccessSection({
       value_text: v,
       label: addLabel.trim() || null,
       sort_order: nextOrder,
+      is_global: Boolean(isMithun && addShareGlobally),
     })
     if (error) {
       toast.error(error.message)
@@ -350,6 +360,7 @@ export function QuickAccessSection({
     setEditValue(row.value_text)
     setEditLabel(row.label || '')
     setEditFieldType(row.field_type as QuickAccessFieldType)
+    setEditShareGlobally(Boolean(row.is_global))
   }
 
   const saveEdit = async () => {
@@ -365,6 +376,7 @@ export function QuickAccessSection({
         value_text: v,
         label: editLabel.trim() || null,
         field_type: editFieldType,
+        is_global: Boolean(isMithun && editShareGlobally),
         updated_at: new Date().toISOString(),
       })
       .eq('id', editingId)
@@ -487,7 +499,7 @@ export function QuickAccessSection({
                 <p className="text-[9px] text-sky-200/50 uppercase tracking-widest font-bold mt-1.5 truncate">
                   {collapsed
                     ? 'Your saved logins & notes — tap to expand'
-                    : `${items.length} saved · ${QA_TILES.length} vendors — tap a tile`}
+                    : `${items.length} saved · personal vault + shared client links`}
                 </p>
               </div>
             </div>
@@ -641,19 +653,30 @@ export function QuickAccessSection({
                     className={`${neuInset} border-dashed border-white/12 px-4 py-10 text-center`}
                   >
                     <p className="text-xs text-white/45 leading-relaxed">
-                      No entries yet. Use <span className="text-sky-300 font-semibold">+ Add</span> below — name each field
-                      however you like (e.g. &quot;Scheduler PIN&quot;, &quot;VPN login&quot;).
+                      No entries yet. Use <span className="text-sky-300 font-semibold">+ Add</span> below for this client’s
+                      URL, username, password, phone number, site code, PIN, or notes.
                     </p>
                   </div>
                 )}
 
-                {activeItems.map((row) => (
-                  <div key={row.id} className={`p-4 space-y-3 ${neuCard}`}>
+                {activeItems.map((row) => {
+                  const isShared = Boolean(row.is_global)
+                  const canModifyRow = !isShared || isMithun
+                  return (
+                  <div key={row.id} className={`p-4 space-y-3 ${neuCard} ${isShared ? 'border-[#FACC15]/20' : ''}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-400/80 mb-1">
-                          {row.label?.trim() || fieldLabel(row.field_type)}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-400/80">
+                            {row.label?.trim() || fieldLabel(row.field_type)}
+                          </p>
+                          {isShared && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-[#FACC15]/25 bg-[#FACC15]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-[#FACC15]">
+                              <Crown size={10} />
+                              Shared
+                            </span>
+                          )}
+                        </div>
                         {row.label?.trim() && (
                           <p className="text-[9px] text-white/30 uppercase tracking-wider">{fieldLabel(row.field_type)}</p>
                         )}
@@ -668,7 +691,7 @@ export function QuickAccessSection({
                           >
                             <Check size={15} />
                           </button>
-                        ) : (
+                        ) : canModifyRow ? (
                           <button
                             type="button"
                             onClick={() => startEdit(row)}
@@ -677,15 +700,17 @@ export function QuickAccessSection({
                           >
                             <Pencil size={15} />
                           </button>
+                        ) : null}
+                        {canModifyRow && (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(row.id)}
+                            className="p-2 rounded-lg bg-red-500/10 text-red-400/90 hover:bg-red-500/20"
+                            title="Delete"
+                          >
+                            <Trash2 size={15} />
+                          </button>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(row.id)}
-                          className="p-2 rounded-lg bg-red-500/10 text-red-400/90 hover:bg-red-500/20"
-                          title="Delete"
-                        >
-                          <Trash2 size={15} />
-                        </button>
                         <button
                           type="button"
                           onClick={() =>
@@ -738,12 +763,23 @@ export function QuickAccessSection({
                           <label className="text-[9px] uppercase font-bold text-white/35 block mb-1">Value</label>
                           {inputForField(editFieldType, editValue, setEditValue, `edit-${row.id}`)}
                         </div>
+                        {isMithun && (
+                          <label className="flex items-start gap-2 rounded-xl border border-[#FACC15]/15 bg-[#FACC15]/5 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#FACC15]/80">
+                            <input
+                              type="checkbox"
+                              className="mt-0.5 accent-[#FACC15]"
+                              checked={editShareGlobally}
+                              onChange={(e) => setEditShareGlobally(e.target.checked)}
+                            />
+                            Keep this entry shared for all users
+                          </label>
+                        )}
                       </div>
                     ) : (
                       renderValueDisplay(row)
                     )}
                   </div>
-                ))}
+                )})}
               </div>
 
               {/* Secondary: add — starts collapsed */}
@@ -796,6 +832,17 @@ export function QuickAccessSection({
                       <label className="text-[9px] uppercase font-bold text-white/35 block mb-1">Value</label>
                       {inputForField(addFieldType, addValue, setAddValue, 'add-value')}
                     </div>
+                    {isMithun && (
+                      <label className="flex items-start gap-2 rounded-xl border border-[#FACC15]/15 bg-[#FACC15]/5 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#FACC15]/80">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 accent-[#FACC15]"
+                          checked={addShareGlobally}
+                          onChange={(e) => setAddShareGlobally(e.target.checked)}
+                        />
+                        Share permanently with all users
+                      </label>
+                    )}
                     <button
                       type="button"
                       onClick={handleAdd}

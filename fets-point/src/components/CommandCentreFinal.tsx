@@ -19,7 +19,7 @@ import { AccessHub } from './AccessHub'
 import { supabase } from '../lib/supabase'
 import { NotificationBanner } from './NotificationBanner'
 import { FetsChatPopup } from './FetsChatPopup'
-import { canSwitchBranches, formatBranchName, getAvailableBranches } from '../utils/authUtils'
+import { canEditRoster, canSwitchBranches, formatBranchName, getAvailableBranches } from '../utils/authUtils'
 import { useAppModules } from '../hooks/useAppModules'
 import { LocationSelectorThread } from './LocationSelectorThread'
 import { SevenDayExamOutlook } from './SevenDayExamOutlook'
@@ -169,6 +169,10 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
 
     const totalCandidates = filteredTodaysExams.reduce((s: number, e: any) => s + (e.candidate_count || 0), 0)
     const healthColor = opsMetrics.healthScore >= 80 ? '#10b981' : opsMetrics.healthScore >= 50 ? '#f59e0b' : '#ef4444'
+    const activeBranchLabel = BRANCH_LABELS[activeBranch] || formatBranchName(activeBranch)
+    const scrollToQuickAccess = () => {
+        document.getElementById('quick-access-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
 
     if (isLoadingStats) {
         return (
@@ -438,55 +442,87 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                     (section rails + vertical rhythm)
                 ═══════════════════════════════════════════════════════ */}
                 <div className="flex flex-col gap-10 md:gap-14">
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    {[
-                        { label: 'Candidates', value: totalCandidates, icon: Users, color: '#BADFE7', sub: 'registered today' },
-                    ].map((stat, i) => (
-                        <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.1 }}
-                            className="sov-card group relative overflow-visible min-h-[168px] flex flex-col justify-between">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#FACC15]/5 to-transparent blur-3xl -mr-16 -mt-16 group-hover:from-[#FACC15]/10 transition-all duration-500" />
-                            
-                            <div className="relative z-10 flex items-start justify-between">
-                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-[#FACC15]/40 transition-all duration-500">
-                                    <stat.icon size={18} style={{ color: stat.color }} className="opacity-70 group-hover:opacity-100 transition-opacity" />
+                <motion.section
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-4 md:gap-6"
+                    aria-label="Today command overview"
+                >
+                    <div className="sov-card relative overflow-hidden min-h-[240px] border-[#FACC15]/10">
+                        <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[#FACC15]/10 via-[#FACC15]/[0.03] to-transparent blur-2xl" />
+                        <div className="relative z-10 flex flex-col h-full gap-8">
+                            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
+                                <div>
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <Sparkles size={14} className="text-[#FACC15]" />
+                                        <span className="sov-label text-[#FACC15]">Today at {activeBranchLabel}</span>
+                                    </div>
+                                    <h2 className="text-2xl md:text-4xl font-black text-white tracking-tighter leading-none">
+                                        Clear command deck for daily centre operations.
+                                    </h2>
+                                    <p className="mt-4 max-w-2xl text-sm md:text-base text-white/45 leading-relaxed">
+                                        Exams, roster, case reporting, support portals, and client credentials are grouped below so the home page is easier to scan and act on.
+                                    </p>
                                 </div>
-                                <ArrowUpRight size={14} className="text-white/10 group-hover:text-[#FACC15] transition-all" />
+                                <div className="rounded-2xl border border-[#FACC15]/20 bg-[#FACC15]/10 px-4 py-3 text-right shrink-0">
+                                    <div className="text-[9px] font-black uppercase tracking-[0.3em] text-[#FACC15]/70">Centre</div>
+                                    <div className="text-lg font-black text-[#FACC15] uppercase tracking-wider">{activeBranchLabel}</div>
+                                </div>
                             </div>
-                            
-                            <div className="relative z-10 mt-auto">
-                                <div className="text-3xl md:text-4xl font-bold tracking-tighter text-white mb-1 group-hover:text-[#FACC15] transition-colors leading-none">{stat.value}</div>
-                                <div className="text-[10px] md:text-sm font-black text-white/60 tracking-wider uppercase group-hover:opacity-100 transition-opacity leading-none mt-2">{stat.label}</div>
-                                <div className="text-[8px] md:text-[9px] text-white/20 mt-1.5 uppercase tracking-widest font-bold leading-none">{stat.sub}</div>
-                            </div>
-                        </motion.div>
-                    ))}
 
-                    {/* Raise a Case — opens incident workspace (same route as former MGMT menu) */}
-                    <motion.button
-                        type="button"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.25 }}
-                        onClick={() => onNavigate?.('incident-log')}
-                        className="sov-card group relative overflow-visible min-h-[168px] flex flex-col justify-between text-left cursor-pointer border-rose-500/10 hover:border-[#FACC15]/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FACC15]/50"
-                    >
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-rose-500/10 to-transparent blur-3xl -mr-16 -mt-16 group-hover:from-[#FACC15]/10 transition-all duration-500" />
-                        <div className="relative z-10 flex items-start justify-between">
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-sm bg-rose-500/10 border border-rose-500/25 flex items-center justify-center group-hover:border-[#FACC15]/40 transition-all duration-500">
-                                <AlertCircle size={18} className="text-rose-400/90 group-hover:text-[#FACC15] transition-colors" />
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-auto">
+                                {[
+                                    { label: 'Candidates Today', value: totalCandidates, sub: `${filteredTodaysExams.length} exam sessions`, icon: Users, color: '#BADFE7' },
+                                    { label: 'Open Cases', value: dashboardData?.openEvents ?? 0, sub: 'needs attention', icon: AlertCircle, color: '#fb7185' },
+                                    { label: 'Centre Health', value: `${opsMetrics.healthScore}%`, sub: opsMetrics.topIssue, icon: Activity, color: healthColor },
+                                ].map((stat) => (
+                                    <div key={stat.label} className="rounded-2xl border border-white/[0.08] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                                <stat.icon size={16} style={{ color: stat.color }} />
+                                            </div>
+                                            <span className="text-[8px] font-black uppercase tracking-[0.22em] text-white/25">{stat.label}</span>
+                                        </div>
+                                        <div className="text-3xl font-black text-white tracking-tighter leading-none">{stat.value}</div>
+                                        <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-white/35">{stat.sub}</div>
+                                    </div>
+                                ))}
                             </div>
-                            <ArrowUpRight size={14} className="text-white/10 group-hover:text-[#FACC15] transition-all" />
                         </div>
-                        <div className="relative z-10 mt-auto">
-                            <div className="text-3xl md:text-4xl font-bold tracking-tighter text-white mb-1 group-hover:text-[#FACC15] transition-colors leading-none">
-                                {dashboardData?.openEvents ?? 0}
-                            </div>
-                            <div className="text-[10px] md:text-sm font-black text-white/60 tracking-wider uppercase group-hover:opacity-100 transition-opacity leading-none mt-2">Raise a Case</div>
-                            <div className="text-[8px] md:text-[9px] text-white/20 mt-1.5 uppercase tracking-widest font-bold leading-none">open incidents · tap to report</div>
-                        </div>
-                    </motion.button>
-                </motion.div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-3">
+                        {[
+                            { label: 'Raise a Case', sub: 'Report incidents and issues', icon: AlertCircle, onClick: () => onNavigate?.('incident-log'), tone: 'rose' },
+                            { label: 'Roster', sub: canEditRoster(profile?.email, profile?.role) ? 'Mithun edit access enabled' : 'View-only for this user', icon: Calendar, onClick: () => onNavigate?.('fets-roster'), tone: 'gold' },
+                            { label: 'Quick Access', sub: 'Client URLs, passwords, phones and notes', icon: Key, onClick: scrollToQuickAccess, tone: 'sky' },
+                        ].map((action) => (
+                            <button
+                                key={action.label}
+                                type="button"
+                                onClick={action.onClick}
+                                className="sov-card group relative overflow-hidden min-h-[116px] text-left border-white/[0.08] hover:border-[#FACC15]/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FACC15]/50"
+                            >
+                                <div className={`absolute inset-0 opacity-70 transition-opacity group-hover:opacity-100 ${
+                                    action.tone === 'rose' ? 'bg-gradient-to-br from-rose-500/10 to-transparent' :
+                                    action.tone === 'sky' ? 'bg-gradient-to-br from-sky-500/10 to-transparent' :
+                                    'bg-gradient-to-br from-[#FACC15]/10 to-transparent'
+                                }`} />
+                                <div className="relative z-10 flex items-start justify-between gap-4">
+                                    <div>
+                                        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:border-[#FACC15]/35 transition-colors">
+                                            <action.icon size={17} className="text-[#FACC15]" />
+                                        </div>
+                                        <div className="text-sm font-black text-white uppercase tracking-[0.14em]">{action.label}</div>
+                                        <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-white/35">{action.sub}</div>
+                                    </div>
+                                    <ArrowUpRight size={15} className="text-white/15 group-hover:text-[#FACC15] transition-colors" />
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </motion.section>
 
                 <div className="relative shrink-0 py-0.5" aria-hidden>
                     <div className="h-px w-full bg-gradient-to-r from-transparent via-[#FACC15]/22 to-transparent shadow-[0_0_20px_rgba(250,204,21,0.06)]" />
@@ -561,7 +597,9 @@ export default function CommandCentre({ onNavigate, onAiQuery }: { onNavigate?: 
                 {/* ═══════════════════════════════════════════════════════
                     QUICK ACCESS — vendor-grouped credentials
                 ═══════════════════════════════════════════════════════ */}
-                <QuickAccessSection profile={profile} authUserId={user?.id} />
+                <div id="quick-access-section" className="scroll-mt-28">
+                    <QuickAccessSection profile={profile} authUserId={user?.id} />
+                </div>
 
             </div>
         </div>

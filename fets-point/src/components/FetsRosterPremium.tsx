@@ -740,6 +740,10 @@ export function FetsRosterPremium() {
   }
 
   const handleCellClick = (profileId: string, date: Date) => {
+    if (!canEdit) {
+      showNotification('warning', 'Roster editing is restricted to Mithun super admin.')
+      return
+    }
     const dateStr = formatDateForIST(date)
     const staffMember = staffProfiles.find(s => s.id === profileId)
     const existing = schedules.find(s => s.profile_id === profileId && s.date === dateStr)
@@ -754,23 +758,6 @@ export function FetsRosterPremium() {
     if (!selectedCellData || !user || !canEdit || !profile) {
       showNotification('warning', 'Unable to save shift - permission or context issue')
       return
-    }
-    const isMithun = profile?.email === 'mithun@fets.in'
-    const isSuperAdminRole = profile?.role === 'super_admin'
-    const hasExplicitPermission = profile?.permissions &&
-      ((profile.permissions as any).can_edit_roster === true || (profile.permissions as any).roster_edit === true)
-    const bypassApproval = isMithun || isSuperAdminRole || hasExplicitPermission
-
-    if (!bypassApproval) {
-      const approved = requests.find(req =>
-        req.user_id === selectedCellData.profileId &&
-        req.requested_date === selectedCellData.date &&
-        req.status === 'approved'
-      )
-      if (!approved) {
-        showNotification('error', 'LOCK TRIGGERED: No approved Super Admin request found for this change.')
-        return
-      }
     }
 
     const scheduleData = {

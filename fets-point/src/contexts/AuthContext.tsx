@@ -170,19 +170,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasPermission = (permission: string): boolean => {
     if (!profile) return false;
 
-    // Super admins have all permissions by default
+    if (permission === 'can_edit_roster') {
+      return checkRosterEditPermission(profile.email, profile.role);
+    }
+
+    // Super admins have all non-roster permissions by default
     if (profile.role === 'super_admin') return true;
 
     // These specific permissions are still restricted and must be explicitly granted
     const restrictedPermissions = ['user_management_edit'];
-
-    if (permission === 'can_edit_roster') {
-      if (checkRosterEditPermission(profile.email, profile.role)) return true;
-      const permissions = typeof profile.permissions === 'object' && profile.permissions !== null
-        ? (profile.permissions as Record<string, boolean>)
-        : {};
-      return !!(permissions['can_edit_roster'] || permissions['roster_edit']);
-    }
 
     if (restrictedPermissions.includes(permission)) {
       const permissions = typeof profile.permissions === 'object' && profile.permissions !== null

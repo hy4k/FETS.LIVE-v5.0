@@ -20,7 +20,7 @@ export const EnhancedQuickAddModal: React.FC<QuickAddModalProps> = ({
   staffProfiles,
   currentDate
 }) => {
-  const { user } = useAuth()
+  const { user, hasPermission } = useAuth()
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
   const [workShift, setWorkShift] = useState('D')
   const [patternStartDate, setPatternStartDate] = useState(
@@ -67,6 +67,10 @@ export const EnhancedQuickAddModal: React.FC<QuickAddModalProps> = ({
 
   const handleGenerate = async () => {
     if (!selectedStaffIds.length) return
+    if (!hasPermission('can_edit_roster')) {
+      alert('Roster generation is restricted to Mithun super admin.')
+      return
+    }
     setIsSubmitting(true)
 
     try {
