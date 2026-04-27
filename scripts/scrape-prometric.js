@@ -2,7 +2,7 @@
 /**
  * CMA Prometric Seat Availability Scraper
  *
- * Scrapes the Prometric scheduling portal for CMA exam seat availability
+ * Navigates Prometric's scheduling portal to check CMA exam seat availability
  * and upserts results into the `cma_availability` Supabase table.
  *
  * Prerequisites:
@@ -11,7 +11,7 @@
  *
  * Usage:
  *   node scripts/scrape-prometric.js
- *   node scripts/scrape-prometric.js --headless=false   # debug mode
+ *   node scripts/scrape-prometric.js --headless=false   # debug: shows browser
  *   node scripts/scrape-prometric.js --center=cochin    # single center
  */
 
@@ -23,7 +23,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenvConfig({ path: resolve(__dirname, '../fets-point/.env') });
-dotenvConfig({ path: resolve(__dirname, '../.env') }); // fallback
+dotenvConfig({ path: resolve(__dirname, '../.env') });
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
@@ -37,20 +37,19 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Prometric test center codes for CMA India centers.
-// Update these codes from: https://www.prometric.com/test-takers/search/icma
 const CENTERS = [
-  { id: 'cochin',      prometricCode: 'CKOCHI',   city: 'Kochi',              state: 'Kerala' },
-  { id: 'calicut',     prometricCode: 'CKOZHI',   city: 'Kozhikode',          state: 'Kerala' },
-  { id: 'trivandrum',  prometricCode: 'CTRIVN',   city: 'Thiruvananthapuram', state: 'Kerala' },
-  { id: 'bangalore',   prometricCode: 'CBANG',    city: 'Bengaluru',          state: 'Karnataka' },
-  { id: 'chennai',     prometricCode: 'CCHENN',   city: 'Chennai',            state: 'Tamil Nadu' },
+  { id: 'cochin',      city: 'Kochi',              state: 'Kerala',     country: 'IND' },
+  { id: 'calicut',     city: 'Kozhikode',           state: 'Kerala',     country: 'IND' },
+  { id: 'trivandrum',  city: 'Thiruvananthapuram',  state: 'Kerala',     country: 'IND' },
+  { id: 'bangalore',   city: 'Bengaluru',            state: 'Karnataka',  country: 'IND' },
+  { id: 'chennai',     city: 'Chennai',              state: 'Tamil Nadu', country: 'IND' },
 ];
 
 const EXAM_PARTS = ['1', '2'];
 
-// Prometric scheduling portal base URL (adjust if portal URL changes)
-const PROMETRIC_BASE = 'https://www.prometric.com/test-takers/search/icma';
+// Prometric ProScheduler search URL for ICMA (CMA) exams
+const PROMETRIC_URL = 'https://proscheduler.prometric.com/';
+const EXAM_SPONSOR = 'ICMA'; // sponsor code for CMA
 
 // ── Argument Parsing ───────────────────────────────────────────────────────
 
@@ -73,70 +72,143 @@ if (centersToScrape.length === 0) {
   process.exit(1);
 }
 
+// ── Browser Context ────────────────────────────────────────────────────────
+
+async function createStealthContext(browser) {
+  const context = await browser.newContext({
+    // Match a real Windows Chrome fingerprint
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    viewport: { width: 1366, height: 768 },
+    locale: 'en-US',
+    timezoneId: 'Asia/Kolkata',
+    extraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+      'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"',
+      'Upgrade-Insecure-Requests': '1',
+    },
+  });
+
+  // Remove webdriver flag that Cloudflare detects
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+    Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+    window.chrome = { runtime: {} };
+  });
+
+  return context;
+}
+
 // ── Scraping Logic ─────────────────────────────────────────────────────────
 
 async function scrapeCenter(page, center, examPart) {
-  console.log(`  ↳ Scraping ${center.id} — Part ${examPart}…`);
+  console.log(`  ↳ Scraping ${center.id} Part ${examPart}…`);
 
   try {
-    // Navigate to the Prometric availability search page
-    await page.goto(PROMETRIC_BASE, { waitUntil: 'networkidle', timeout: 30000 });
+    // Step 1: Load the ProScheduler page (use domcontentloaded — never use networkidle
+    // on Cloudflare-protected sites, it never fires due to beacon/analytics requests)
+    await page.goto(PROMETRIC_URL, {
+      waitUntil: 'domcontentloaded',
+      timeout: 45000,
+    });
 
-    // -- Step 1: Select exam part / program --
-    // These selectors are illustrative; update them after inspecting the live portal.
-    const examPartSelector = `[data-testid="exam-part-${examPart}"], input[value*="Part ${examPart}"]`;
-    if (await page.locator(examPartSelector).count() > 0) {
-      await page.locator(examPartSelector).first().click();
+    // Wait for actual page content, not just the HTML shell
+    await page.waitForTimeout(3000);
+
+    // Step 2: Check if Cloudflare challenge page loaded instead of the real page
+    const title = await page.title();
+    const bodyText = (await page.textContent('body').catch(() => '')).toLowerCase();
+
+    if (title.toLowerCase().includes('just a moment') || bodyText.includes('checking your browser')) {
+      console.warn(`  ⚠️  Cloudflare challenge detected for ${center.id} Part ${examPart}. Waiting 8s…`);
+      await page.waitForTimeout(8000);
     }
 
-    // -- Step 2: Enter test center / location --
-    const locationInput = page.locator('input[placeholder*="location"], input[placeholder*="city"], #location-search');
-    if (await locationInput.count() > 0) {
-      await locationInput.first().fill(center.city);
+    // Step 3: Look for the exam sponsor selector / search form
+    // ProScheduler flow: Select sponsor → select exam → enter location → see dates
+    const sponsorInput = page.locator([
+      'input[placeholder*="sponsor" i]',
+      'input[placeholder*="exam" i]',
+      '[data-testid="sponsor-search"]',
+      '#sponsor-search',
+      '.sponsor-input',
+    ].join(', ')).first();
+
+    if (await sponsorInput.count() > 0) {
+      await sponsorInput.click();
+      await sponsorInput.fill(EXAM_SPONSOR);
       await page.keyboard.press('Enter');
-      await page.waitForLoadState('networkidle', { timeout: 15000 });
+      await page.waitForTimeout(2000);
     }
 
-    // -- Step 3: Look for availability indicators --
-    // Prometric typically shows seat counts or colored availability badges.
-    // Update these selectors to match the actual portal markup.
-    const availabilityData = await page.evaluate((centerId) => {
-      const rows = Array.from(document.querySelectorAll('[data-center-id], .test-center-row, .location-result'));
-      for (const row of rows) {
-        const text = row.textContent || '';
-        if (text.toLowerCase().includes(centerId)) {
-          const seatText = row.querySelector('.seat-count, [data-seats], .availability-count')?.textContent?.trim();
-          const statusEl = row.querySelector('.status-badge, .availability-badge, [data-status]');
-          const status = statusEl?.dataset?.status || statusEl?.textContent?.trim().toLowerCase() || '';
-          const seats = seatText ? parseInt(seatText, 10) : null;
-          return { found: true, seats, status };
-        }
-      }
-      return { found: false };
-    }, center.city.toLowerCase());
+    // Step 4: Enter location / city
+    const locationInput = page.locator([
+      'input[placeholder*="city" i]',
+      'input[placeholder*="location" i]',
+      'input[placeholder*="zip" i]',
+      '#location-input',
+    ].join(', ')).first();
 
-    // Determine normalized status
+    if (await locationInput.count() > 0) {
+      await locationInput.click();
+      await locationInput.fill(center.city);
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(3000);
+    }
+
+    // Step 5: Parse availability from the results
+    const result = await page.evaluate(({ city, part }) => {
+      // Generic selectors — update these after inspecting the live ProScheduler DOM
+      const containers = document.querySelectorAll(
+        '.test-center, .location-card, .site-result, [class*="center"], [class*="location"]'
+      );
+
+      for (const el of containers) {
+        const text = (el.textContent || '').toLowerCase();
+        if (!text.includes(city.toLowerCase())) continue;
+
+        // Look for seat count patterns like "3 seats", "Available", "Full"
+        const seatMatch = text.match(/(\d+)\s*seat/i);
+        const seats = seatMatch ? parseInt(seatMatch[1], 10) : null;
+
+        const isFull = /full|sold out|no.*avail|unavail/i.test(text);
+        const isLimited = /limited|few/i.test(text) || (seats !== null && seats <= 5);
+        const isAvailable = /available|\d+.*seat/i.test(text) && !isFull;
+
+        let status = 'unknown';
+        if (isFull) status = 'unavailable';
+        else if (isLimited) status = 'limited';
+        else if (isAvailable) status = 'available';
+
+        return { found: true, seats, status };
+      }
+
+      // If no center found but page loaded (no error), treat as unknown
+      const pageLoaded = document.body.children.length > 2;
+      return { found: false, pageLoaded };
+    }, { city: center.city, part: examPart });
+
     let status = 'unknown';
     let availableSeats = null;
 
-    if (availabilityData.found) {
-      const rawStatus = availabilityData.status || '';
-      if (rawStatus.includes('available') || (availabilityData.seats && availabilityData.seats > 5)) {
-        status = 'available';
-      } else if (rawStatus.includes('limited') || (availabilityData.seats && availabilityData.seats <= 5)) {
-        status = 'limited';
-      } else if (rawStatus.includes('full') || rawStatus.includes('unavailable') || availabilityData.seats === 0) {
-        status = 'unavailable';
-      }
-      availableSeats = availabilityData.seats;
+    if (result.found) {
+      status = result.status;
+      availableSeats = result.seats;
     }
 
     return { status, available_seats: availableSeats };
+
   } catch (err) {
-    console.warn(`  ⚠️  Error scraping ${center.id} Part ${examPart}: ${err.message}`);
-    return { status: 'unknown', available_seats: null, error: err.message };
+    const msg = err.message?.split('\n')[0] || err.message;
+    console.warn(`  ⚠️  ${center.id} Part ${examPart}: ${msg}`);
+    return { status: 'unknown', available_seats: null, error: msg };
   }
 }
+
+// ── Database ───────────────────────────────────────────────────────────────
 
 async function upsertRecord({ centerId, examPart, status, availableSeats, notes }) {
   const { error } = await supabase.from('cma_availability').upsert(
@@ -154,7 +226,8 @@ async function upsertRecord({ centerId, examPart, status, availableSeats, notes 
   if (error) {
     console.error(`  ❌ DB upsert failed for ${centerId} Part ${examPart}:`, error.message);
   } else {
-    console.log(`  ✅ Saved: ${centerId} Part ${examPart} → ${status} (seats: ${availableSeats ?? 'unknown'})`);
+    const icon = status === 'available' ? '🟢' : status === 'limited' ? '🟡' : status === 'unavailable' ? '🔴' : '⚪';
+    console.log(`  ${icon} Saved: ${centerId} Part ${examPart} → ${status}${availableSeats != null ? ` (${availableSeats} seats)` : ''}`);
   }
 }
 
@@ -162,21 +235,25 @@ async function upsertRecord({ centerId, examPart, status, availableSeats, notes 
 
 async function main() {
   console.log('🔍 CMA Prometric Scraper starting…');
-  console.log(`   Centers: ${centersToScrape.map(c => c.id).join(', ')}`);
+  console.log(`   Centers : ${centersToScrape.map(c => c.id).join(', ')}`);
   console.log(`   Headless: ${headless}`);
   console.log('');
 
-  const browser = await chromium.launch({ headless });
-  const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36',
-    viewport: { width: 1280, height: 800 },
+  const browser = await chromium.launch({
+    headless,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-blink-features=AutomationControlled', // hides headless flag
+      '--disable-features=IsolateOrigins,site-per-process',
+    ],
   });
 
+  const context = await createStealthContext(browser);
   const page = await context.newPage();
-  // Suppress non-essential console output from the scraped page
-  page.on('console', () => {});
+  page.on('console', () => {}); // suppress page console noise
 
-  let totalProcessed = 0;
+  let totalUpdated = 0;
   let totalErrors = 0;
 
   for (const center of centersToScrape) {
@@ -184,6 +261,7 @@ async function main() {
 
     for (const part of EXAM_PARTS) {
       const result = await scrapeCenter(page, center, part);
+
       await upsertRecord({
         centerId: center.id,
         examPart: part,
@@ -192,22 +270,24 @@ async function main() {
         notes: result.error ? `Scrape error: ${result.error}` : null,
       });
 
-      if (result.status === 'unknown' && result.error) totalErrors++;
-      else totalProcessed++;
+      if (result.error) totalErrors++;
+      else totalUpdated++;
 
-      // Polite delay between requests
-      await page.waitForTimeout(1500);
+      // Polite delay — looks more human, avoids rate limiting
+      await page.waitForTimeout(2000 + Math.random() * 1000);
     }
   }
 
   await browser.close();
 
-  console.log(`\n🏁 Done — ${totalProcessed} records updated, ${totalErrors} errors`);
+  console.log(`\n🏁 Done — ${totalUpdated} rows updated, ${totalErrors} scrape errors`);
 
-  if (totalErrors > 0) {
-    console.log('\n💡 If selectors failed, open the scraper in debug mode:');
-    console.log('   node scripts/scrape-prometric.js --headless=false');
-    console.log('   Then inspect the Prometric portal and update the selectors in this file.\n');
+  if (totalErrors === centersToScrape.length * EXAM_PARTS.length) {
+    console.log('\n⚠️  All requests failed. Prometric may be blocking this IP.');
+    console.log('   Options:');
+    console.log('   1. Run locally with --headless=false to debug');
+    console.log('   2. Update PROMETRIC_URL in this file if the portal URL changed');
+    console.log('   3. Use a manual update form in the app (see README)\n');
   }
 }
 
