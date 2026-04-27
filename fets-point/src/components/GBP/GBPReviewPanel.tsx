@@ -159,7 +159,7 @@ function BranchReviews({ branch }: { branch: GBPBranch }) {
           <ReviewCard
             key={review.reviewId}
             review={review}
-            onReply={replyToReview}
+            onReply={async (name, comment) => { await replyToReview(name, comment) }}
             onDeleteReply={deleteReply}
           />
         ))}

@@ -174,3 +174,11 @@ export function useGBPInsights(branch: GBPBranch, startDate?: string, endDate?: 
 
   return { insights, loading, error, fetchInsights }
 }
+
+// ── useGBP (compatibility shim for GBPDashboard) ─────────────────────────
+// businessInfo fields (storefrontAddress, openInfo, metadata) are not
+// available in the current GBP API integration; returns null so the
+// dashboard header gracefully renders nothing.
+export function useGBP(_branch: GBPBranch) {
+  return { businessInfo: null as null, loading: false, error: null as string | null }
+}

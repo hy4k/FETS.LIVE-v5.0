@@ -1,4 +1,4 @@
-export { default as GBPReviewPanel } from './GBPReviewPanel';
-export { default as GBPInsightsPanel } from './GBPInsightsPanel';
-export { default as GBPPostPublisher } from './GBPPostPublisher';
-export { default as GBPQandA } from './GBPQandA';
+export { GBPReviewPanel } from './GBPReviewPanel';
+export { GBPInsightsPanel } from './GBPInsightsPanel';
+export { GBPPostPublisher } from './GBPPostPublisher';
+export { GBPQandA } from './GBPQandA';
