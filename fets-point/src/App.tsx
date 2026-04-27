@@ -63,6 +63,7 @@ const LostAndFound = lazy(() => import('./components/LostAndFound').then(module 
 const RaiseACasePage = lazy(() => import('./components/RaiseACasePage').then(module => ({ default: module.RaiseACasePage })))
 
 const FetsProfilePage = lazy(() => import('./components/FetsProfile').then(module => ({ default: module.FetsProfile })))
+const CMAAvailabilityWidget = lazy(() => import('./components/CMAAvailabilityWidget').then(module => ({ default: module.CMAAvailabilityWidget })))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -124,6 +125,7 @@ function AppContent() {
       if (activeTab === 'news-manager') return <NewsManager />;
       if (activeTab === 'lost-and-found') return <LostAndFound />;
       if (activeTab === 'fets-roster') return <FetsRoster />;
+      if (activeTab === 'cma-availability') return <CMAAvailabilityWidget />;
     }
 
     const routeComponents: { [key: string]: { component: JSX.Element; name: string } } = {
@@ -144,7 +146,8 @@ function AppContent() {
       'lost-and-found': { component: <LostAndFound />, name: 'Lost & Found' },
       'user-management': { component: <UserManagement onNavigate={setActiveTab} />, name: 'User Management' },
       'profile': { component: <FetsProfilePage />, name: 'Profile' },
-      'fets-omni-ai': { component: <FetsIntelligence initialQuery={aiQuery} />, name: 'FETS AI' }
+      'fets-omni-ai': { component: <FetsIntelligence initialQuery={aiQuery} />, name: 'FETS AI' },
+      'cma-availability': { component: <CMAAvailabilityWidget />, name: 'CMA Availability' }
     }
 
     const currentRoute = routeComponents[activeTab] || routeComponents['command-center'];
