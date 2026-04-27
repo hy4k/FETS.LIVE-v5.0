@@ -72,6 +72,4 @@ VALUES
   ('cochin',     'Kochi, Kerala',              '2', 'unknown', 'Awaiting first scrape'),
   ('calicut',    'Kozhikode, Kerala',          '1', 'unknown', 'Awaiting first scrape'),
   ('calicut',    'Kozhikode, Kerala',          '2', 'unknown', 'Awaiting first scrape'),
-  ('trivandrum', 'Thiruvananthapuram, Kerala', '1', 'unknown', 'Awaiting first scrape'),
-  ('trivandrum', 'Thiruvananthapuram, Kerala', '2', 'unknown', 'Awaiting first scrape')
 ON CONFLICT (center_id, exam_part) DO NOTHING;

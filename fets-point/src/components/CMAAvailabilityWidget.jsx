@@ -3,9 +3,8 @@ import { supabase } from '../lib/supabase';
 import { RefreshCw, AlertCircle, CheckCircle, Clock, MapPin, Calendar, TrendingUp } from 'lucide-react';
 
 const PROMETRIC_CENTERS = [
-  { id: 'cochin',     label: 'Cochin',     city: 'Kochi, Kerala' },
-  { id: 'calicut',    label: 'Calicut',    city: 'Kozhikode, Kerala' },
-  { id: 'trivandrum', label: 'Trivandrum', city: 'Thiruvananthapuram, Kerala' },
+  { id: 'cochin',  label: 'Cochin',  city: 'Kochi, Kerala' },
+  { id: 'calicut', label: 'Calicut', city: 'Kozhikode, Kerala' },
 ];
 
 const STATUS_CONFIG = {
