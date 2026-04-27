@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, CalendarDays, AlertCircle, Brain, Globe, X, MapPin, CheckCircle2 } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, AlertCircle, Brain, Globe, X, MapPin, CheckCircle2, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBranch } from '../hooks/useBranch';
 import { useAppModules } from '../hooks/useAppModules';
@@ -26,6 +26,7 @@ export function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
     { id: 'fets-calendar-demo', label: 'CELPIP', icon: CalendarDays },
     { id: 'incident-log', label: 'Cases', icon: AlertCircle },
     { id: 'fets-intelligence', label: 'AI', icon: Brain },
+    { id: 'cma-availability', label: 'CMA US', icon: GraduationCap },
   ].filter(item => {
     const mod = modules.find(m => m.id === item.id);
     return !mod || mod.is_enabled;

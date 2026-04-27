@@ -6,7 +6,7 @@ import {
   Calendar, Server, Newspaper, PackageSearch, Brain, UserCheck,
   ChevronDown, X, MapPin, Activity, CheckCircle2,
   MessageSquare, AlertCircle, ArrowUpRight, Settings2,
-  Layers, Lock, Zap
+  Layers, Lock, Zap, GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
@@ -75,6 +75,7 @@ export function MobileHome({ setActiveTab, profile }: MobileHomeProps) {
     { id: 'my-desk', label: 'My Desk', icon: MessageSquare, gradient: 'from-pink-500 to-rose-600' },
     { id: 'fets-roster', label: 'Roster', icon: UserCheck, gradient: 'from-indigo-500 to-blue-600' },
     { id: 'incident-log', label: 'Cases', icon: AlertCircle, gradient: 'from-orange-500 to-red-600' },
+    { id: 'cma-availability', label: 'CMA US', icon: GraduationCap, gradient: 'from-teal-500 to-emerald-600' },
   ].filter(item => {
     const mod = modules.find(m => m.id === item.id);
     return !mod || mod.is_enabled;
