@@ -38,11 +38,9 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CENTERS = [
-  { id: 'cochin',      city: 'Kochi',              state: 'Kerala',     country: 'IND' },
-  { id: 'calicut',     city: 'Kozhikode',           state: 'Kerala',     country: 'IND' },
-  { id: 'trivandrum',  city: 'Thiruvananthapuram',  state: 'Kerala',     country: 'IND' },
-  { id: 'bangalore',   city: 'Bengaluru',            state: 'Karnataka',  country: 'IND' },
-  { id: 'chennai',     city: 'Chennai',              state: 'Tamil Nadu', country: 'IND' },
+  { id: 'cochin',     city: 'Kochi',             state: 'Kerala', country: 'IND' },
+  { id: 'calicut',    city: 'Kozhikode',          state: 'Kerala', country: 'IND' },
+  { id: 'trivandrum', city: 'Thiruvananthapuram', state: 'Kerala', country: 'IND' },
 ];
 
 const EXAM_PARTS = ['1', '2'];
