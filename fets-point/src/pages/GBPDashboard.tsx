@@ -102,14 +102,14 @@ const GBPDashboard: React.FC = () => {
         <div>
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <GBPReviewPanel branch={activeBranch} />
-              <GBPInsightsPanel branch={activeBranch} />
+              <GBPReviewPanel />
+              <GBPInsightsPanel />
             </div>
           )}
-          {activeTab === 'reviews' && <GBPReviewPanel branch={activeBranch} />}
-          {activeTab === 'posts' && <GBPPostPublisher branch={activeBranch} />}
-          {activeTab === 'qa' && <GBPQandA branch={activeBranch} />}
-          {activeTab === 'insights' && <GBPInsightsPanel branch={activeBranch} />}
+          {activeTab === 'reviews' && <GBPReviewPanel />}
+          {activeTab === 'posts' && <GBPPostPublisher />}
+          {activeTab === 'qa' && <GBPQandA />}
+          {activeTab === 'insights' && <GBPInsightsPanel />}
         </div>
       </div>
     </div>
