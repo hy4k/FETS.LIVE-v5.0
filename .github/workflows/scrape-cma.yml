@@ -2,8 +2,8 @@ name: CMA Seat Availability Scraper
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # every 6 hours (midnight, 6am, noon, 6pm UTC)
-  workflow_dispatch:          # lets you trigger it manually from GitHub UI
+    - cron: '0 2,8,14,20 * * *'   # 4× daily at 2am, 8am, 2pm, 8pm UTC (IST +5:30)
+  workflow_dispatch:               # manual trigger from GitHub UI
 
 jobs:
   scrape:
@@ -24,6 +24,13 @@ jobs:
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
+
+      # Inject saved session cookie so CAPTCHA is not re-triggered
+      # Set this secret: Settings → Secrets → PROMETRIC_SESSION_JSON
+      # Value: the contents of .prometric-session.json from a local --headless=false run
+      - name: Restore Prometric session cookie
+        if: ${{ secrets.PROMETRIC_SESSION_JSON != '' }}
+        run: echo '${{ secrets.PROMETRIC_SESSION_JSON }}' > .prometric-session.json
 
       - name: Run scraper
         run: node scripts/scrape-prometric.js

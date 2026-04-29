@@ -5,7 +5,7 @@ import {
   Brain, ShieldAlert, MessageSquare, ClipboardList,
   CalendarDays, UserSearch, UserCheck, Menu, LogOut,
   Server, Cpu, Shield, X, PackageSearch, AlertCircle, BookOpen,
-  ChevronRight, Settings2, Layers
+  ChevronRight, Settings2, Layers, GraduationCap
 } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
@@ -106,6 +106,7 @@ export function Header({ isMobile = false, sidebarOpen = false, setSidebarOpen, 
     { id: 'fets-calendar', label: 'CALENDAR', icon: CalendarDays },
     { id: 'fets-calendar-demo', label: 'CELPIP', icon: CalendarDays },
     { id: 'fets-roster', label: 'ROSTER', icon: UserCheck },
+    { id: 'cma-availability', label: 'CMA US', icon: GraduationCap },
   ];
 
   const secondRowItems = [
